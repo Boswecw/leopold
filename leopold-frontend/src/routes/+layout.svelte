@@ -32,7 +32,8 @@
 	  authStore.initialize();
 	  audioStore.initialize();
   
-	  const handleKeydown = (e: KeyboardEvent) => {
+	  const handleKeydown = (e) => {
+
 		if (e.key === 'Escape') {
 		  sidebarOpen = false;
 		  userMenuOpen = false;

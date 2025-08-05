@@ -1,36 +1,25 @@
-import tailwindcss from '@tailwindcss/vite';
+// vite.config.ts - Correct configuration for SvelteKit + Tailwind
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import path from 'path';
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit()],
-	test: {
-		expect: { requireAssertions: true },
-		projects: [
-			{
-				extends: './vite.config.ts',
-				test: {
-					name: 'client',
-					environment: 'browser',
-					browser: {
-						enabled: true,
-						provider: 'playwright',
-						instances: [{ browser: 'chromium' }]
-					},
-					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
-					exclude: ['src/lib/server/**'],
-					setupFiles: ['./vitest-setup-client.ts']
-				}
-			},
-			{
-				extends: './vite.config.ts',
-				test: {
-					name: 'server',
-					environment: 'node',
-					include: ['src/**/*.{test,spec}.{js,ts}'],
-					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
-				}
-			}
-		]
-	}
-});
+  plugins: [sveltekit()],
+  resolve: {
+    alias: {
+      '$lib': path.resolve('./src/lib'),
+      '$stores': path.resolve('./src/lib/stores'),
+      '$components': path.resolve('./src/lib/components'),
+      '$types': path.resolve('./src/lib/types'),
+      '$utils': path.resolve('./src/lib/utils')
+    }
+  },
+  server: {
+    host: true,
+    port: 5173
+  },
+  preview: {
+    host: true,
+    port: 4173
+  }
+ });

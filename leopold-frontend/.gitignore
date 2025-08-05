@@ -1,23 +1,40 @@
-node_modules
+# Node/Yarn
+node_modules/
+.yarn/
+.pnp.*
+.yarnrc.yml
+yarn.lock
 
-# Output
-.output
-.vercel
-.netlify
-.wrangler
-/.svelte-kit
-/build
+# SvelteKit build output
+.svelte-kit/
+build/
+.output/
 
-# OS
-.DS_Store
-Thumbs.db
+# Deployment platforms
+.vercel/
+.netlify/
+.wrangler/
 
-# Env
+# Environment files (do not track secrets)
 .env
 .env.*
 !.env.example
 !.env.test
 
-# Vite
+# Vite-generated timestamps (hot reload cache)
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
