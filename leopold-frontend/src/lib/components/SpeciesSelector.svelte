@@ -1,740 +1,580 @@
-<!-- src/lib/components/SpeciesSelector.svelte -->
 <script lang="ts">
-    import { createEventDispatcher, tick } from 'svelte';
-    import { Search, ChevronDown, ChevronUp, X, Sparkles, MapPin, Volume2, Camera, Info, ExternalLink } from 'lucide-svelte';
-    import { uiStore } from '$stores';
-    import type { 
-      SpeciesSearchResult, 
-      ObservationType, 
-      Location 
-    } from '$lib/types';
-  
-    const dispatch = createEventDispatcher<{
-      speciesSelected: SpeciesSearchResult;
-      speciesCleared: void;
-      searchRequested: { query: string; filters: any };
-    }>();
-  
-    // Props
-    export let observationType: ObservationType = 'visual';
-    export let location: Location | null = null;
-    export let audioFeatures: number[] | undefined = undefined;
-    export let selectedSpecies: SpeciesSearchResult | null = null;
-    export let enableAISuggestions = true;
-    export let enableLocationFilter = true;
-    export let showTaxonomy = true;
-    export let maxSuggestions = 8;
-  
-    // State
-    let searchQuery = '';
-    let searchResults: SpeciesSearchResult[] = [];
-    let aiSuggestions: SpeciesSearchResult[] = [];
-    let isSearching = false;
-    let isLoadingSuggestions = false;
-    let showDropdown = false;
-    let searchTimeout: number;
-    let searchInput: HTMLInputElement;
-  
-    // UI state
-    let activeTab: 'search' | 'suggestions' | 'recent' = 'suggestions';
-    let showAdvanced = false;
-    let recentSpecies: SpeciesSearchResult[] = [];
-  
-    // Advanced filters
-    let filters = {
+  import { createEventDispatcher } from 'svelte';
+  import { Search, ChevronDown, ChevronUp, X, Sparkles, MapPin, Volume2, Camera, Info, ExternalLink } from 'lucide-svelte';
+  import { uiStore } from '$lib/stores';
+  import type {
+    SpeciesSearchResult,
+    Location,
+    ObservationType
+  } from '$lib/types';
+
+  // Props
+  export let selectedSpecies: SpeciesSearchResult | null = null;
+  export let location: Location | null = null;
+  export let observationType: ObservationType = 'visual';
+  export let audioFeatures: number[] | undefined = undefined;
+  export let required = true;
+
+  // Component state
+  let searchQuery = '';
+  let searchResults: SpeciesSearchResult[] = [];
+  let isSearching = false;
+  let showDropdown = false;
+  let isExpanded = false;
+  let searchTimeout: NodeJS.Timeout;
+
+  const dispatch = createEventDispatcher<{
+    speciesSelected: SpeciesSearchResult;
+    speciesCleared: void;
+  }>();
+
+  // Mock species data - in a real app, this would come from an API
+  const mockSpecies: SpeciesSearchResult[] = [
+    {
+      id: 'turdus-migratorius',
+      common_name: 'American Robin',
+      scientific_name: 'Turdus migratorius',
       taxonomy: {
-        kingdom: '',
-        class: '',
-        order: '',
-        family: ''
+        kingdom: 'Animalia',
+        phylum: 'Chordata',
+        class: 'Aves',
+        order: 'Passeriformes',
+        family: 'Turdidae',
+        genus: 'Turdus',
+        species: 'migratorius'
       },
-      habitat: '',
-      activity: '',
-      size: '',
-      conservation_status: ''
-    };
-  
-    // Mock data for development (replace with API calls)
-    const mockSpeciesData: SpeciesSearchResult[] = [
-      {
-        id: '1',
-        common_name: 'American Robin',
-        scientific_name: 'Turdus migratorius',
-        taxonomy: {
-          kingdom: 'Animalia',
-          phylum: 'Chordata',
-          class: 'Aves',
-          order: 'Passeriformes',
-          family: 'Turdidae',
-          genus: 'Turdus',
-          species: 'migratorius'
-        },
-        habitat_types: ['suburban', 'parks', 'forests'],
-        audio_characteristics: {
-          frequency_range: [2000, 8000],
-          call_patterns: ['melodic song', 'alarm call'],
-          seasonal_activity: ['spring', 'summer', 'fall']
-        },
-        image_url: 'https://example.com/robin.jpg',
-        conservation_status: 'Least Concern'
+      conservation_status: 'Least Concern',
+      habitat_types: ['urban', 'suburban', 'woodland', 'parks'],
+      audio_characteristics: {
+        frequency_range: [2000, 4000],
+        call_patterns: ['melodic song', 'alarm call'],
+        seasonal_activity: ['spring', 'summer', 'fall']
       },
-      {
-        id: '2',
-        common_name: 'Red-eyed Tree Frog',
-        scientific_name: 'Agalychnis callidryas',
-        taxonomy: {
-          kingdom: 'Animalia',
-          phylum: 'Chordata',
-          class: 'Amphibia',
-          order: 'Anura',
-          family: 'Phyllomedusidae',
-          genus: 'Agalychnis',
-          species: 'callidryas'
-        },
-        habitat_types: ['rainforest', 'wetland'],
-        audio_characteristics: {
-          frequency_range: [1000, 3000],
-          call_patterns: ['chirp', 'trill'],
-          seasonal_activity: ['wet season']
-        },
-        conservation_status: 'Least Concern'
+      description: 'A large songbird with a round body, long legs, and fairly long tail.',
+      image_url: 'https://example.com/robin.jpg'
+    },
+    {
+      id: 'agalychnis-callidryas',
+      common_name: 'Red-eyed Tree Frog',
+      scientific_name: 'Agalychnis callidryas',
+      taxonomy: {
+        kingdom: 'Animalia',
+        phylum: 'Chordata',
+        class: 'Amphibia',
+        order: 'Anura',
+        family: 'Phyllomedusidae',
+        genus: 'Agalychnis',
+        species: 'callidryas'
       },
-      {
-        id: '3',
-        common_name: 'Northern Cardinal',
-        scientific_name: 'Cardinalis cardinalis',
-        taxonomy: {
-          kingdom: 'Animalia',
-          phylum: 'Chordata',
-          class: 'Aves',
-          order: 'Passeriformes',
-          family: 'Cardinalidae',
-          genus: 'Cardinalis',
-          species: 'cardinalis'
-        },
-        habitat_types: ['woodland', 'suburban', 'parks'],
-        audio_characteristics: {
-          frequency_range: [1500, 6000],
-          call_patterns: ['whistle', 'chip call'],
-          seasonal_activity: ['year-round']
-        },
-        conservation_status: 'Least Concern'
-      }
-    ];
-  
-    // Reactive statements
-    $: if (searchQuery.length > 2) {
-      handleSearch();
-    } else if (searchQuery.length === 0) {
-      searchResults = [];
+      conservation_status: 'Least Concern',
+      habitat_types: ['rainforest', 'tropical', 'trees'],
+      audio_characteristics: {
+        frequency_range: [1500, 3000],
+        call_patterns: ['chirp', 'trill'],
+        seasonal_activity: ['wet season']
+      },
+      description: 'A vibrant green tree frog with distinctive red eyes.',
+      image_url: 'https://example.com/tree-frog.jpg'
+    },
+    {
+      id: 'cardinalis-cardinalis',
+      common_name: 'Northern Cardinal',
+      scientific_name: 'Cardinalis cardinalis',
+      taxonomy: {
+        kingdom: 'Animalia',
+        phylum: 'Chordata',
+        class: 'Aves',
+        order: 'Passeriformes',
+        family: 'Cardinalidae',
+        genus: 'Cardinalis',
+        species: 'cardinalis'
+      },
+      conservation_status: 'Least Concern',
+      habitat_types: ['woodland', 'gardens', 'shrubland', 'swamps'],
+      audio_characteristics: {
+        frequency_range: [2500, 5000],
+        call_patterns: ['whistle', 'chip call'],
+        seasonal_activity: ['year-round']
+      },
+      description: 'A mid-sized songbird with a body length of 21–23 cm.',
+      image_url: 'https://example.com/cardinal.jpg'
     }
-  
-    $: if (location && enableAISuggestions && !isLoadingSuggestions) {
-      loadAISuggestions();
+  ];
+
+  // Filter species based on location and observation type
+  function getLocationFilteredSpecies(): SpeciesSearchResult[] {
+    let filtered = [...mockSpecies];
+
+    // Filter by habitat if location has habitat info
+    if (location?.habitat) {
+      filtered = filtered.filter(species => 
+        species.habitat_types.some(habitat =>
+          habitat.toLowerCase().includes(location.habitat?.toLowerCase() || '')
+        )
+      );
     }
-  
-    $: filteredSuggestions = aiSuggestions.filter(species => {
-      if (!enableLocationFilter || !location) return true;
+
+    // Filter by observation type
+    if (observationType === 'audio') {
+      filtered = filtered.filter(species => species.audio_characteristics);
+    }
+
+    return filtered;
+  }
+
+  // Get AI-powered suggestions based on audio features
+  function getAudioBasedSuggestions(): SpeciesSearchResult[] {
+    if (!audioFeatures || observationType !== 'audio') {
+      return getLocationFilteredSpecies();
+    }
+
+    let suggestions = getLocationFilteredSpecies();
+    
+    // Simple frequency-based matching
+    if (audioFeatures.length > 0) {
+      const avgFreq = audioFeatures.reduce((a, b) => a + b, 0) / audioFeatures.length;
       
-      // Simple habitat-based filtering (in real app, this would be more sophisticated)
-      if (location.habitat) {
-        return species.habitat_types.some(habitat => 
-          habitat.toLowerCase().includes(location.habitat.toLowerCase())
-        );
-      }
+      // Prioritize species with audio characteristics
+      suggestions = suggestions.filter(s => s.audio_characteristics);
       
-      return true;
-    });
-  
-    async function handleSearch() {
-      if (searchTimeout) {
-        clearTimeout(searchTimeout);
-      }
-  
-      searchTimeout = window.setTimeout(async () => {
-        if (!searchQuery.trim()) return;
-  
-        isSearching = true;
-        showDropdown = true;
-        activeTab = 'search';
-  
-        try {
-          // Simulate API call with mock data
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          searchResults = mockSpeciesData.filter(species =>
-            species.common_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            species.scientific_name.toLowerCase().includes(searchQuery.toLowerCase())
-          );
-  
-          dispatch('searchRequested', { 
-            query: searchQuery, 
-            filters: { 
-              location, 
-              observationType,
-              ...filters
-            }
-          });
-  
-        } catch (error) {
-          console.error('Species search failed:', error);
-          uiStore.showNotification('error', 'Species search failed. Please try again.');
-          searchResults = [];
-        } finally {
-          isSearching = false;
-        }
-      }, 300);
-    }
-  
-    async function loadAISuggestions() {
-      if (!enableAISuggestions) return;
-  
-      isLoadingSuggestions = true;
-  
-      try {
-        // Simulate AI-powered suggestions based on location and observation type
-        await new Promise(resolve => setTimeout(resolve, 800));
+      // Sort by frequency similarity
+      suggestions.sort((a, b) => {
+        if (!a.audio_characteristics || !b.audio_characteristics) return 0;
         
-        // Mock AI suggestions based on observation type
-        let suggestions = [...mockSpeciesData];
+        const aMatch = a.audio_characteristics.frequency_range ? 
+          Math.abs(avgFreq - (a.audio_characteristics.frequency_range[0] + a.audio_characteristics.frequency_range[1]) / 2) :
+          Infinity;
         
-        if (observationType === 'audio') {
-          // Prioritize species with audio characteristics
-          suggestions = suggestions.filter(s => s.audio_characteristics);
-          
-          // If we have audio features, try to match frequency ranges
-          if (audioFeatures && audioFeatures.length > 0) {
-            suggestions = suggestions.sort((a, b) => {
-              const avgFreq = audioFeatures.reduce((sum, f) => sum + f, 0) / audioFeatures.length;
-              
-              const aMatch = a.audio_characteristics?.frequency_range ? 
-                Math.abs(avgFreq - (a.audio_characteristics.frequency_range[0] + a.audio_characteristics.frequency_range[1]) / 2) : 
-                Infinity;
-              
-              const bMatch = b.audio_characteristics?.frequency_range ? 
-                Math.abs(avgFreq - (b.audio_characteristics.frequency_range[0] + b.audio_characteristics.frequency_range[1]) / 2) : 
-                Infinity;
-              
-              return aMatch - bMatch;
-            });
-          }
-        }
-  
-        // Limit to maxSuggestions
-        aiSuggestions = suggestions.slice(0, maxSuggestions);
-  
-      } catch (error) {
-        console.error('Failed to load AI suggestions:', error);
-        aiSuggestions = [];
-      } finally {
-        isLoadingSuggestions = false;
+        const bMatch = b.audio_characteristics.frequency_range ? 
+          Math.abs(avgFreq - (b.audio_characteristics.frequency_range[0] + b.audio_characteristics.frequency_range[1]) / 2) :
+          Infinity;
+        
+        return aMatch - bMatch;
+      });
+    }
+
+    return suggestions.slice(0, 10); // Limit to top 10 suggestions
+  }
+
+  // Search species
+  function searchSpecies() {
+    if (!searchQuery.trim()) {
+      searchResults = getLocationFilteredSpecies().slice(0, 10);
+      return;
+    }
+
+    isSearching = true;
+    
+    // Simulate API delay
+    setTimeout(() => {
+      const query = searchQuery.toLowerCase();
+      let results = getLocationFilteredSpecies().filter(species => 
+        species.common_name.toLowerCase().includes(query) ||
+        species.scientific_name.toLowerCase().includes(query) ||
+        species.taxonomy.family.toLowerCase().includes(query)
+      );
+
+      // If no results, show all species
+      if (results.length === 0 && searchQuery.trim()) {
+        results = getLocationFilteredSpecies();
       }
-    }
-  
-    function selectSpecies(species: SpeciesSearchResult) {
-      selectedSpecies = species;
-      searchQuery = species.common_name;
-      showDropdown = false;
-      
-      // Add to recent species
-      recentSpecies = [species, ...recentSpecies.filter(s => s.id !== species.id)].slice(0, 5);
-      
-      dispatch('speciesSelected', species);
-      uiStore.showNotification('success', `Selected: ${species.common_name}`);
-    }
-  
-    function clearSelection() {
-      selectedSpecies = null;
-      searchQuery = '';
-      searchResults = [];
-      showDropdown = false;
-      
-      dispatch('speciesCleared');
-    }
-  
-    function handleInputFocus() {
+
+      searchResults = results.slice(0, 20);
+      isSearching = false;
       showDropdown = true;
-      if (aiSuggestions.length > 0) {
-        activeTab = 'suggestions';
-      } else if (recentSpecies.length > 0) {
-        activeTab = 'recent';
-      }
+    }, 300);
+  }
+
+  // Handle search input with debouncing
+  function handleSearchInput() {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(searchSpecies, 500);
+  }
+
+  // Select species
+  function selectSpecies(species: SpeciesSearchResult) {
+    selectedSpecies = species;
+    searchQuery = species.common_name;
+    showDropdown = false;
+    dispatch('speciesSelected', species);
+  }
+
+  // Clear selection
+  function clearSelection() {
+    selectedSpecies = null;
+    searchQuery = '';
+    searchResults = [];
+    showDropdown = false;
+    dispatch('speciesCleared');
+  }
+
+  // Get species icon based on taxonomy class
+  function getSpeciesIcon(species: SpeciesSearchResult): string {
+    const className = species.taxonomy.class?.toLowerCase();
+    switch (className) {
+      case 'aves': return '🐦';
+      case 'mammalia': return '🐾';
+      case 'amphibia': return '🐸';
+      case 'reptilia': return '🦎';
+      case 'insecta': return '🦋';
+      case 'arachnida': return '🕷️';
+      case 'actinopterygii': return '🐟';
+      default: return '🔍';
     }
-  
-    function handleInputBlur() {
-      // Delay hiding dropdown to allow for clicks
-      setTimeout(() => {
-        showDropdown = false;
-      }, 200);
+  }
+
+  // Format frequency range for display
+  function formatFrequencyRange(range: [number, number]): string {
+    return `${(range[0] / 1000).toFixed(1)}-${(range[1] / 1000).toFixed(1)} kHz`;
+  }
+
+  // Get conservation status color
+  function getConservationColor(status: string | undefined): string {
+    if (!status) return 'text-gray-500';
+    
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('extinct')) return 'text-red-800';
+    if (statusLower.includes('endangered')) return 'text-red-600';
+    if (statusLower.includes('vulnerable')) return 'text-orange-600';
+    if (statusLower.includes('threatened')) return 'text-yellow-600';
+    if (statusLower.includes('concern')) return 'text-green-600';
+    return 'text-gray-600';
+  }
+
+  // Initialize with AI suggestions if audio features are available
+  $: if (audioFeatures && observationType === 'audio') {
+    searchResults = getAudioBasedSuggestions();
+    showDropdown = true;
+  }
+
+  // Close dropdown when clicking outside
+  function handleClickOutside(event: MouseEvent) {
+    const target = event.target as Element;
+    if (!target.closest('.species-selector')) {
+      showDropdown = false;
     }
-  
-    function switchTab(tab: typeof activeTab) {
-      activeTab = tab;
-      if (tab === 'suggestions' && aiSuggestions.length === 0) {
-        loadAISuggestions();
-      }
-    }
-  
-    function getSpeciesIcon(species: SpeciesSearchResult): string {
-      const className = species.taxonomy.class?.toLowerCase();
-      switch (className) {
-        case 'aves': return '🐦';
-        case 'mammalia': return '🐾';
-        case 'amphibia': return '🐸';
-        case 'reptilia': return '🦎';
-        case 'insecta': return '🦋';
-        case 'arachnida': return '🕷️';
-        default: return '🌿';
-      }
-    }
-  
-    function getConservationColor(status: string): string {
-      switch (status.toLowerCase()) {
-        case 'least concern': return 'text-green-600';
-        case 'near threatened': return 'text-yellow-600';
-        case 'vulnerable': return 'text-orange-600';
-        case 'endangered': return 'text-red-600';
-        case 'critically endangered': return 'text-red-800';
-        default: return 'text-gray-600';
-      }
-    }
-  
-    function formatFrequencyRange(range: [number, number]): string {
-      return `${range[0]}-${range[1]} Hz`;
-    }
-  </script>
-  
-  <!-- Species Selector Component -->
-  <div class="species-selector relative">
-    <!-- Main Search Input -->
-    <div class="search-container relative">
-      <div class="input-wrapper relative">
-        <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-        <input
-          bind:this={searchInput}
-          type="text"
-          bind:value={searchQuery}
-          on:focus={handleInputFocus}
-          on:blur={handleInputBlur}
-          placeholder="Search for species (e.g., American Robin, oak tree)..."
-          class="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-transparent text-sm {selectedSpecies ? 'bg-green-50 border-green-300' : ''}"
-        />
-        
-        {#if selectedSpecies}
-          <button
-            type="button"
-            on:click={clearSelection}
-            class="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-red-600 transition-colors"
-            aria-label="Clear selection"
-          >
-            <X class="w-4 h-4" />
-          </button>
-        {:else if isSearching || isLoadingSuggestions}
-          <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <div class="spinner w-5 h-5 border-2 border-gray-300 border-t-primary-forest rounded-full animate-spin"></div>
-          </div>
-        {/if}
+  }
+</script>
+
+<svelte:window on:click={handleClickOutside} />
+
+<div class="species-selector">
+  <!-- Header -->
+  <div class="header mb-4">
+    <h3 class="text-lg font-semibold text-primary-forest mb-2 flex items-center gap-2">
+      <Search class="w-5 h-5" />
+      Species Identification {required ? '*' : ''}
+    </h3>
+    <p class="text-sm text-gray-600">
+      Search for species or let AI help identify from your {observationType} observation
+    </p>
+  </div>
+
+  <!-- AI Suggestions Banner -->
+  {#if audioFeatures && observationType === 'audio'}
+    <div class="ai-suggestions mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+      <div class="flex items-center gap-2 mb-2">
+        <Sparkles class="w-4 h-4 text-purple-600" />
+        <span class="font-medium text-purple-800">AI-Powered Suggestions</span>
       </div>
-  
-      <!-- Current Selection Display -->
-      {#if selectedSpecies}
-        <div class="selection-display mt-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div class="flex items-start gap-3">
-            <div class="species-icon text-2xl">
-              {getSpeciesIcon(selectedSpecies)}
-            </div>
+      <p class="text-sm text-purple-700">
+        Based on your audio recording's frequency analysis, we've ranked species by likelihood.
+      </p>
+    </div>
+  {/if}
+
+  <!-- Selected Species Display -->
+  {#if selectedSpecies}
+    <div class="selected-species mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+      <div class="flex items-start justify-between">
+        <div class="flex items-start gap-3">
+          <div class="species-icon text-2xl">
+            {getSpeciesIcon(selectedSpecies)}
+          </div>
+          <div>
+            <h4 class="font-semibold text-green-800">{selectedSpecies.common_name}</h4>
+            <p class="text-sm italic text-green-700">{selectedSpecies.scientific_name}</p>
             
-            <div class="species-info flex-1">
-              <h4 class="font-semibold text-primary-forest">
-                {selectedSpecies.common_name}
-              </h4>
-              <p class="text-sm italic text-gray-600 mb-2">
-                {selectedSpecies.scientific_name}
-              </p>
-              
-              {#if showTaxonomy}
-                <div class="taxonomy text-xs text-gray-500 space-y-1">
-                  <div class="taxonomy-line">
-                    <span class="font-medium">Class:</span> {selectedSpecies.taxonomy.class}
-                    <span class="ml-4 font-medium">Order:</span> {selectedSpecies.taxonomy.order}
-                  </div>
-                  <div class="taxonomy-line">
-                    <span class="font-medium">Family:</span> {selectedSpecies.taxonomy.family}
-                  </div>
-                </div>
-              {/if}
-  
-              {#if selectedSpecies.conservation_status}
-                <div class="conservation-status mt-2">
-                  <span class="text-xs font-medium {getConservationColor(selectedSpecies.conservation_status)}">
-                    Conservation: {selectedSpecies.conservation_status}
-                  </span>
-                </div>
-              {/if}
-  
-              {#if selectedSpecies.audio_characteristics && (observationType === 'audio' || observationType === 'multi-modal')}
-                <div class="audio-info mt-2 p-2 bg-white rounded border text-xs">
-                  <div class="flex items-center gap-1 mb-1">
-                    <Volume2 class="w-3 h-3" />
-                    <span class="font-medium">Audio Characteristics:</span>
-                  </div>
-                  <div class="space-y-1 text-gray-600">
-                    <div>Frequency: {formatFrequencyRange(selectedSpecies.audio_characteristics.frequency_range)}</div>
-                    <div>Patterns: {selectedSpecies.audio_characteristics.call_patterns.join(', ')}</div>
-                  </div>
-                </div>
-              {/if}
+            <!-- Taxonomy Info -->
+            <div class="taxonomy mt-1 text-xs text-green-600">
+              <div class="taxonomy-line">
+                <span class="font-medium">Class:</span> {selectedSpecies.taxonomy.class}
+                <span class="ml-4 font-medium">Order:</span> {selectedSpecies.taxonomy.order}
+              </div>
+              <div class="taxonomy-line">
+                <span class="font-medium">Family:</span> {selectedSpecies.taxonomy.family}
+              </div>
             </div>
+
+            <!-- Audio Characteristics for Audio Observations -->
+            {#if selectedSpecies.audio_characteristics && (observationType === 'audio' || observationType === 'multi-modal')}
+              <div class="audio-info mt-2 p-2 bg-white rounded border text-xs">
+                <div class="flex items-center gap-1 mb-1">
+                  <Volume2 class="w-3 h-3 text-blue-600" />
+                  <span class="font-medium text-blue-800">Audio Profile</span>
+                </div>
+                <div class="space-y-1 text-gray-600">
+                  <div>Frequency: {formatFrequencyRange(selectedSpecies.audio_characteristics.frequency_range)}</div>
+                  <div>Patterns: {selectedSpecies.audio_characteristics.call_patterns.join(', ')}</div>
+                </div>
+              </div>
+            {/if}
           </div>
         </div>
+        
+        <button
+          on:click={clearSelection}
+          class="p-1 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50"
+          aria-label="Clear selection"
+        >
+          <X class="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  {/if}
+
+  <!-- Search Input -->
+  <div class="search-input-container relative">
+    <div class="relative">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <Search class="w-4 h-4 text-gray-400" />
+      </div>
+      <input
+        type="text"
+        bind:value={searchQuery}
+        on:input={handleSearchInput}
+        on:focus={() => { showDropdown = true; if (!searchQuery) searchSpecies(); }}
+        placeholder="Search by common name, scientific name, or family..."
+        class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+      />
+      
+      <!-- Clear search button -->
+      {#if searchQuery}
+        <button
+          on:click={() => { searchQuery = ''; searchResults = []; }}
+          class="absolute inset-y-0 right-0 pr-3 flex items-center"
+        >
+          <X class="w-4 h-4 text-gray-400 hover:text-gray-600" />
+        </button>
       {/if}
     </div>
-  
+
     <!-- Dropdown Results -->
-    {#if showDropdown && !selectedSpecies}
-      <div class="dropdown absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-96 overflow-hidden">
-        <!-- Tab Navigation -->
-        <div class="tabs flex border-b border-gray-200">
-          <button
-            type="button"
-            on:click={() => switchTab('suggestions')}
-            class="tab-btn flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors {activeTab === 'suggestions' ? 'border-primary-forest text-primary-forest bg-primary-forest/5' : 'border-transparent text-gray-600 hover:text-primary-forest'}"
-          >
-            <div class="flex items-center justify-center gap-2">
-              <Sparkles class="w-4 h-4" />
-              AI Suggestions
-              {#if isLoadingSuggestions}
-                <div class="spinner w-3 h-3 border border-gray-300 border-t-primary-forest rounded-full animate-spin"></div>
-              {/if}
-            </div>
-          </button>
-          
-          <button
-            type="button"
-            on:click={() => switchTab('search')}
-            class="tab-btn flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors {activeTab === 'search' ? 'border-primary-forest text-primary-forest bg-primary-forest/5' : 'border-transparent text-gray-600 hover:text-primary-forest'}"
-          >
-            <div class="flex items-center justify-center gap-2">
-              <Search class="w-4 h-4" />
-              Search Results
-            </div>
-          </button>
-          
-          {#if recentSpecies.length > 0}
+    {#if showDropdown && (searchResults.length > 0 || isSearching)}
+      <div class="search-dropdown absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+        {#if isSearching}
+          <div class="p-4 text-center">
+            <div class="animate-spin w-5 h-5 border-2 border-primary-forest border-t-transparent rounded-full mx-auto mb-2"></div>
+            <p class="text-sm text-gray-600">Searching species...</p>
+          </div>
+        {:else if searchResults.length === 0}
+          <div class="p-4 text-center text-gray-500">
+            <p>No species found. Try a different search term.</p>
+          </div>
+        {:else}
+          {#each searchResults as species, index}
             <button
               type="button"
-              on:click={() => switchTab('recent')}
-              class="tab-btn flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors {activeTab === 'recent' ? 'border-primary-forest text-primary-forest bg-primary-forest/5' : 'border-transparent text-gray-600 hover:text-primary-forest'}"
+              on:click={() => selectSpecies(species)}
+              class="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 focus:bg-gray-50 focus:outline-none"
             >
-              Recent
-            </button>
-          {/if}
-        </div>
-  
-        <!-- Results Content -->
-        <div class="results-content overflow-y-auto max-h-72">
-          {#if activeTab === 'suggestions'}
-            <div class="suggestions-tab">
-              {#if isLoadingSuggestions}
-                <div class="loading-state p-6 text-center">
-                  <div class="spinner w-8 h-8 border-4 border-gray-300 border-t-primary-forest rounded-full animate-spin mx-auto mb-3"></div>
-                  <p class="text-sm text-gray-600">Loading AI suggestions...</p>
-                  <p class="text-xs text-gray-500 mt-1">
-                    Based on {observationType} observation
-                    {#if location}and location{/if}
-                  </p>
-                </div>
-              {:else if filteredSuggestions.length > 0}
-                <div class="suggestions-header p-3 bg-primary-forest/5 border-b border-gray-100">
-                  <div class="flex items-center gap-2 text-sm">
-                    <Sparkles class="w-4 h-4 text-primary-forest" />
-                    <span class="font-medium text-primary-forest">
-                      AI-powered suggestions for {observationType} observations
-                    </span>
-                    {#if location}
-                      <MapPin class="w-3 h-3 text-gray-500" />
-                    {/if}
-                  </div>
+              <div class="flex items-start gap-3">
+                <div class="species-icon text-xl flex-shrink-0 mt-1">
+                  {getSpeciesIcon(species)}
                 </div>
                 
-                {#each filteredSuggestions as species (species.id)}
-                  <button
-                    type="button"
-                    on:click={() => selectSpecies(species)}
-                    class="species-result w-full text-left p-4 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
-                  >
-                    <div class="flex items-start gap-3">
-                      <div class="species-icon text-xl">
-                        {getSpeciesIcon(species)}
-                      </div>
-                      
-                      <div class="species-details flex-1">
-                        <div class="names">
-                          <h5 class="font-medium text-gray-900">{species.common_name}</h5>
-                          <p class="text-sm italic text-gray-600">{species.scientific_name}</p>
-                        </div>
-                        
-                        <div class="meta-info mt-2 text-xs text-gray-500 space-y-1">
-                          <div class="taxonomy-info">
-                            {species.taxonomy.class} • {species.taxonomy.family}
-                          </div>
-                          
-                          {#if species.habitat_types.length > 0}
-                            <div class="habitat-info">
-                              Habitats: {species.habitat_types.slice(0, 3).join(', ')}
-                            </div>
-                          {/if}
-                          
-                          {#if species.audio_characteristics && (observationType === 'audio' || observationType === 'multi-modal')}
-                            <div class="audio-match flex items-center gap-1 text-blue-600">
-                              <Volume2 class="w-3 h-3" />
-                              {formatFrequencyRange(species.audio_characteristics.frequency_range)}
-                            </div>
-                          {/if}
-                        </div>
-                      </div>
-                      
-                      <div class="confidence-indicator">
-                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                      </div>
-                    </div>
-                  </button>
-                {/each}
-              {:else}
-                <div class="empty-state p-6 text-center text-gray-500">
-                  <Sparkles class="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p class="text-sm">No AI suggestions available.</p>
-                  <p class="text-xs mt-1">Try providing location information or search manually.</p>
-                </div>
-              {/if}
-            </div>
-          
-          {:else if activeTab === 'search'}
-            <div class="search-tab">
-              {#if isSearching}
-                <div class="loading-state p-6 text-center">
-                  <div class="spinner w-8 h-8 border-4 border-gray-300 border-t-primary-forest rounded-full animate-spin mx-auto mb-3"></div>
-                  <p class="text-sm text-gray-600">Searching species...</p>
-                </div>
-              {:else if searchResults.length > 0}
-                {#each searchResults as species (species.id)}
-                  <button
-                    type="button"
-                    on:click={() => selectSpecies(species)}
-                    class="species-result w-full text-left p-4 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
-                  >
-                    <div class="flex items-start gap-3">
-                      <div class="species-icon text-xl">
-                        {getSpeciesIcon(species)}
-                      </div>
-                      
-                      <div class="species-details flex-1">
-                        <div class="names">
-                          <h5 class="font-medium text-gray-900">{species.common_name}</h5>
-                          <p class="text-sm italic text-gray-600">{species.scientific_name}</p>
-                        </div>
-                        
-                        <div class="meta-info mt-2 text-xs text-gray-500">
-                          <span class="conservation-status {getConservationColor(species.conservation_status)}">
-                            {species.conservation_status}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                {/each}
-              {:else if searchQuery.length > 0}
-                <div class="empty-state p-6 text-center text-gray-500">
-                  <Search class="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p class="text-sm">No species found for "{searchQuery}"</p>
-                  <p class="text-xs mt-1">Try different search terms or check spelling.</p>
-                </div>
-              {:else}
-                <div class="search-prompt p-6 text-center text-gray-500">
-                  <Search class="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p class="text-sm">Start typing to search for species</p>
-                  <p class="text-xs mt-1">Common names or scientific names work</p>
-                </div>
-              {/if}
-            </div>
-          
-          {:else if activeTab === 'recent' && recentSpecies.length > 0}
-            <div class="recent-tab">
-              {#each recentSpecies as species (species.id)}
-                <button
-                  type="button"
-                  on:click={() => selectSpecies(species)}
-                  class="species-result w-full text-left p-4 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
-                >
-                  <div class="flex items-center gap-3">
-                    <div class="species-icon text-lg">
-                      {getSpeciesIcon(species)}
-                    </div>
-                    <div class="species-details flex-1">
-                      <h5 class="font-medium text-gray-900">{species.common_name}</h5>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <h4 class="font-medium text-gray-900">{species.common_name}</h4>
                       <p class="text-sm italic text-gray-600">{species.scientific_name}</p>
+                      
+                      <!-- Taxonomy info -->
+                      <div class="taxonomy-info">
+                        {species.taxonomy.class} • {species.taxonomy.family}
+                      </div>
                     </div>
+                    
+                    <!-- AI match indicator -->
+                    {#if audioFeatures && observationType === 'audio' && index < 3}
+                      <div class="ai-match flex items-center gap-1 text-purple-600">
+                        <Sparkles class="w-3 h-3" />
+                        <span class="text-xs">AI Match #{index + 1}</span>
+                      </div>
+                    {/if}
                   </div>
-                </button>
-              {/each}
-            </div>
+
+                  <!-- Audio characteristics for audio observations -->
+                  {#if species.audio_characteristics && (observationType === 'audio' || observationType === 'multi-modal')}
+                    <div class="audio-match flex items-center gap-1 text-blue-600">
+                      <Volume2 class="w-3 h-3" />
+                      {formatFrequencyRange(species.audio_characteristics.frequency_range)}
+                    </div>
+                  {/if}
+
+                  <!-- Habitat info -->
+                  <div class="habitat-info flex items-center gap-1 text-green-600 mt-1">
+                    <MapPin class="w-3 h-3" />
+                    <span class="text-xs">
+                      {species.habitat_types.slice(0, 3).join(', ')}
+                      {#if species.habitat_types.length > 3}
+                        +{species.habitat_types.length - 3} more
+                      {/if}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Additional metadata -->
+              <div class="meta-info mt-2 text-xs text-gray-500">
+                <span class="conservation-status {getConservationColor(species.conservation_status || 'unknown')}">
+                  {species.conservation_status}
+                </span>
+              </div>
+            </button>
+          {/each}
+
+          <!-- Show more toggle -->
+          {#if searchResults.length >= 10}
+            <button
+              type="button"
+              on:click={() => isExpanded = !isExpanded}
+              class="w-full p-3 text-center text-sm text-primary-forest hover:bg-gray-50 border-t border-gray-100 flex items-center justify-center gap-2"
+            >
+              {#if isExpanded}
+                <ChevronUp class="w-4 h-4" />
+                Show Less
+              {:else}
+                <ChevronDown class="w-4 h-4" />
+                Show More Results
+              {/if}
+            </button>
           {/if}
-        </div>
-  
-        <!-- Advanced Filters Toggle -->
-        <div class="dropdown-footer border-t border-gray-100 p-3">
-          <button
-            type="button"
-            on:click={() => showAdvanced = !showAdvanced}
-            class="advanced-toggle flex items-center gap-2 text-sm text-gray-600 hover:text-primary-forest transition-colors"
-          >
-            <Info class="w-4 h-4" />
-            Advanced Filters
-            {#if showAdvanced}
-              <ChevronUp class="w-4 h-4" />
-            {:else}
-              <ChevronDown class="w-4 h-4" />
-            {/if}
-          </button>
-        </div>
-      </div>
-    {/if}
-  
-    <!-- Advanced Filters Panel -->
-    {#if showAdvanced && showDropdown}
-      <div class="advanced-filters absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-4">
-        <h4 class="font-medium text-primary-forest mb-3">Advanced Search Filters</h4>
-        
-        <div class="filters-grid grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">Habitat Type</label>
-            <select bind:value={filters.habitat} class="w-full text-sm px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-forest">
-              <option value="">Any habitat</option>
-              <option value="forest">Forest</option>
-              <option value="wetland">Wetland</option>
-              <option value="grassland">Grassland</option>
-              <option value="urban">Urban</option>
-              <option value="coastal">Coastal</option>
-            </select>
-          </div>
-          
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">Taxonomic Class</label>
-            <select bind:value={filters.taxonomy.class} class="w-full text-sm px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-forest">
-              <option value="">Any class</option>
-              <option value="Aves">Birds (Aves)</option>
-              <option value="Mammalia">Mammals</option>
-              <option value="Amphibia">Amphibians</option>
-              <option value="Reptilia">Reptiles</option>
-              <option value="Insecta">Insects</option>
-            </select>
-          </div>
-          
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">Conservation Status</label>
-            <select bind:value={filters.conservation_status} class="w-full text-sm px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-forest">
-              <option value="">Any status</option>
-              <option value="Least Concern">Least Concern</option>
-              <option value="Near Threatened">Near Threatened</option>
-              <option value="Vulnerable">Vulnerable</option>
-              <option value="Endangered">Endangered</option>
-            </select>
-          </div>
-          
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">Activity</label>
-            <select bind:value={filters.activity} class="w-full text-sm px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-forest">
-              <option value="">Any time</option>
-              <option value="diurnal">Daytime (Diurnal)</option>
-              <option value="nocturnal">Nighttime (Nocturnal)</option>
-              <option value="crepuscular">Dawn/Dusk (Crepuscular)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    {/if}
-  
-    <!-- Help Text -->
-    {#if !selectedSpecies && !showDropdown}
-      <div class="help-text mt-3 text-xs text-gray-500">
-        {#if enableAISuggestions}
-          <p class="flex items-center gap-1">
-            <Sparkles class="w-3 h-3" />
-            AI suggestions will appear based on your observation type and location
-          </p>
         {/if}
-        <p class="mt-1">
-          You can search by common name (e.g., "Robin") or scientific name (e.g., "Turdus migratorius")
-        </p>
       </div>
     {/if}
   </div>
-  
-  <style>
-    /* Custom dropdown styling */
-    .dropdown {
-      backdrop-filter: blur(4px);
+
+  <!-- Help Text -->
+  <div class="help-text mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+    <h4 class="font-medium text-blue-800 mb-2 flex items-center gap-2">
+      <Info class="w-4 h-4" />
+      Species Identification Tips
+    </h4>
+    <ul class="text-sm text-blue-700 space-y-1">
+      <li>• Start typing the common name (e.g., "Robin", "Cardinal")</li>
+      <li>• Use scientific names for more precise matches</li>
+      <li>• Family names work too (e.g., "Turdidae" for thrushes)</li>
+      {#if observationType === 'audio'}
+        <li>• AI suggestions are based on your audio's frequency profile</li>
+      {/if}
+    </ul>
+  </div>
+
+  <!-- Validation Error -->
+  {#if required && !selectedSpecies}
+    <div class="validation-error mt-4 text-red-600 text-sm flex items-center gap-1">
+      <Search class="w-4 h-4" />
+      Species identification is required
+    </div>
+  {/if}
+</div>
+
+<style>
+  .species-selector {
+    position: relative;
+    width: 100%;
+  }
+
+  .search-dropdown {
+    max-height: 400px;
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #f9fafb;
+  }
+
+  .search-dropdown::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .search-dropdown::-webkit-scrollbar-track {
+    background: #f9fafb;
+  }
+
+  .search-dropdown::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 3px;
+  }
+
+  .taxonomy-info {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+  }
+
+  .taxonomy-line {
+    margin-bottom: 0.125rem;
+  }
+
+  .audio-match,
+  .habitat-info,
+  .ai-match {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  .conservation-status {
+    font-weight: 500;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Animation for AI suggestions */
+  .ai-suggestions {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
     }
-  
-    .tab-btn:focus {
-      outline: 2px solid #2F5D50;
-      outline-offset: -2px;
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
-  
-    .species-result:focus {
-      outline: 2px solid #2F5D50;
-      outline-offset: -2px;
-      background-color: #f9fafb;
+  }
+
+  /* Focus and hover states */
+  button:focus {
+    outline: 2px solid #065f46;
+    outline-offset: 2px;
+  }
+
+  .search-dropdown button:hover {
+    background-color: #f9fafb;
+  }
+
+  .search-dropdown button:focus {
+    background-color: #f3f4f6;
+    outline: none;
+  }
+
+  /* Selected species card styling */
+  .selected-species {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 640px) {
+    .search-dropdown {
+      max-height: 300px;
     }
-  
-    /* Search input enhancements */
-    .input-wrapper:focus-within {
-      box-shadow: 0 0 0 3px rgba(47, 93, 80, 0.1);
+    
+    .meta-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
     }
-  
-    /* Confidence indicator animation */
-    .confidence-indicator .bg-green-500 {
-      animation: pulse 2s infinite;
-    }
-  
-    /* Responsive adjustments */
-    @media (max-width: 640px) {
-      .filters-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .tabs {
-        flex-wrap: wrap;
-      }
-      
-      .tab-btn {
-        min-width: 0;
-        flex: 1 1 auto;
-      }
-    }
-  
-    /* High contrast support */
-    @media (prefers-contrast: high) {
-      .dropdown,
-      .advanced-filters,
-      .selection-display {
-        border-width: 2px;
-      }
-      
-      .species-result:hover,
-      .species-result:focus {
-        background-color: #000;
-        color: #fff;
-      }
-    }
-  
-    /* Reduced motion support */
-    @media (prefers-reduced-motion: reduce) {
-      .tab-btn,
-      .species-result,
-      .confidence-indicator .bg-green-500 {
-        transition: none;
-        animation: none;
-      }
-    }
-  </style>
+  }
+</style>

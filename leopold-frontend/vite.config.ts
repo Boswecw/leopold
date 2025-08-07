@@ -1,25 +1,41 @@
-// vite.config.ts - Correct configuration for SvelteKit + Tailwind
+// vite.config.ts
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
-import path from 'path';
+import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig({
-  plugins: [sveltekit()],
-  resolve: {
-    alias: {
-      '$lib': path.resolve('./src/lib'),
-      '$stores': path.resolve('./src/lib/stores'),
-      '$components': path.resolve('./src/lib/components'),
-      '$types': path.resolve('./src/lib/types'),
-      '$utils': path.resolve('./src/lib/utils')
-    }
-  },
-  server: {
-    host: true,
-    port: 5173
-  },
-  preview: {
-    host: true,
-    port: 4173
-  }
- });
+export default {
+  plugins: [
+    sveltekit(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      strategies: 'generateSW',
+      manifest: {
+        name: 'Leopold Nature Observer',
+        short_name: 'Leopold',
+        start_url: '/',
+        display: 'standalone',
+        background_color: '#ffffff',
+        theme_color: '#2F5D50',
+        icons: [
+          {
+            src: '/icons/icon-144.png',
+            sizes: '144x144',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+      }
+    })
+  ]
+};

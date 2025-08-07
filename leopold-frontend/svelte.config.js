@@ -1,3 +1,4 @@
+// svelte.config.js - Correct TypeScript configuration
 import adapter from '@sveltejs/adapter-auto';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -6,7 +7,10 @@ const config = {
 	// Consult https://svelte.dev/docs/kit/integrations
 	// for more information about preprocessors
 	preprocess: vitePreprocess(),
-	kit: { adapter: adapter() }
+	
+	kit: {
+		adapter: adapter()
+	}
 };
 
 export default config;

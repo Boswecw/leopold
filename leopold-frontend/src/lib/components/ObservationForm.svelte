@@ -1,784 +1,936 @@
-<!-- src/lib/components/ObservationForm.svelte -->
 <script lang="ts">
-    import { createEventDispatcher, onMount } from 'svelte';
-    import { Camera, Mic, MapPin, Search, Upload, X, CheckCircle, AlertCircle } from 'lucide-svelte';
-    import AudioRecorder from './AudioRecorder.svelte';
-    import ImageUpload from './ImageUpload.svelte';
-    import LocationPicker from './LocationPicker.svelte';
-    import SpeciesSelector from './SpeciesSelector.svelte';
-    import { uiStore } from '$stores';
-    import type { 
-      ObservationType, 
-      ObservationFormData, 
-      AudioRecording, 
-      Location,
-      SpeciesSearchResult 
-    } from '$lib/types';
+	import { slide } from 'svelte/transition';
+	import { onMount, createEventDispatcher } from 'svelte';
+	import { Camera, Mic, AlertCircle, CheckCircle } from 'lucide-svelte';
+	import AudioRecorder from './AudioRecorder.svelte';
+	import ImageUpload from './ImageUpload.svelte';
+	import LocationPicker from './LocationPicker.svelte';
+	import SpeciesSelector from './SpeciesSelector.svelte';
+	import { uiStore } from '$lib/stores';
+	import type {
+	  ObservationType,
+	  ObservationFormData,
+	  Location,
+	  AudioRecording,
+	  SpeciesSearchResult
+	} from '$lib/types';
+	import { validateObservationForm } from '$lib/utils/validation';
   
-    const dispatch = createEventDispatcher<{
-      submit: ObservationFormData;
-      cancel: void;
-      typeChanged: ObservationType;
-    }>();
+	// Props
+	export let initialData: Partial<ObservationFormData> = {};
   
-    // Form state
-    export let initialData: Partial<ObservationFormData> = {};
-    
-    let observationType: ObservationType = initialData.observation_type || 'visual';
-    let speciesName = initialData.species_name || '';
-    let description = initialData.description || '';
-    let location: Location | null = initialData.location || null;
-    let audioRecording: AudioRecording | null = null;
-    let selectedImages: File[] = [];
-    let weatherConditions = '';
-    let habitatType = '';
-    let callType = '';
-    let confidence = 3;
+	// Form state
+	let currentStep = 1;
+	const totalSteps = 5;
+	let isSubmitting = false;
   
-    // UI state
-    let currentStep = 1;
-    let totalSteps = 5;
-    let isSubmitting = false;
-    let validationErrors: Record<string, string> = {};
-    let selectedSpecies: SpeciesSearchResult | null = null;
+	// Form data
+	let observationType: ObservationType = initialData.observation_type || 'visual';
+	let location: Location | undefined = initialData.location || undefined;
+	let selectedImages: File[] = initialData.images || [];
+	let audioRecording: AudioRecording | null = initialData.audio_recording || null;
+	let selectedSpecies: SpeciesSearchResult | null = null;
+	let notes = initialData.notes || '';
+	let description = initialData.description || '';
+	let count = initialData.count || 1;
+	let confidence = initialData.confidence || 3;
+	let weatherConditions = initialData.weather_conditions || '';
+	let habitatDescription = initialData.habitat_description || '';
+	let behaviorNotes = initialData.behavior_notes || '';
+	let tags: string[] = initialData.tags || [];
   
-    // Reactive validation
-    $: isValid = validateForm();
-    $: hasMedia = (observationType === 'visual' && selectedImages.length > 0) ||
-                  (observationType === 'audio' && audioRecording) ||
-                  (observationType === 'multi-modal' && selectedImages.length > 0 && audioRecording);
+	// Validation
+	let validationErrors: Record<string, string> = {};
+	let currentStepValid = false;
   
-    onMount(() => {
-      // Auto-detect location if available
-      if (navigator.geolocation && !location) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            location = {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              accuracy: position.coords.accuracy
-            };
-          },
-          (error) => {
-            console.warn('Location detection failed:', error);
-          }
-        );
-      }
-    });
+	// Event dispatcher
+	const dispatch = createEventDispatcher<{
+	  submit: ObservationFormData;
+	  cancel: void;
+	  stepChanged: { step: number; isValid: boolean };
+	}>();
   
-    function validateForm(): boolean {
-      validationErrors = {};
+	// Initialize form
+	onMount(() => {
+	  validateCurrentStep();
+	  if (initialData.species_name) {
+		// Create a mock selected species from initial data
+		selectedSpecies = {
+		  id: 'unknown',
+		  common_name: initialData.species_name,
+		  scientific_name: initialData.scientific_name || '',
+		  taxonomy: {
+			kingdom: 'Unknown',
+			phylum: 'Unknown',
+			class: 'Unknown',
+			order: 'Unknown',
+			family: 'Unknown',
+			genus: 'Unknown',
+			species: 'unknown'
+		  },
+		  habitat_types: [],
+		  conservation_status: undefined
+		};
+	  }
+	});
   
-      // Observation type validation
-      if (!observationType) {
-        validationErrors.observationType = 'Please select an observation type';
-      }
+	// Validate current step
+	function validateCurrentStep() {
+	  validationErrors = {};
+	  currentStepValid = true;
   
-      // Media validation
-      if (!hasMedia) {
-        if (observationType === 'visual' || observationType === 'multi-modal') {
-          validationErrors.images = 'At least one image is required';
-        }
-        if (observationType === 'audio' || observationType === 'multi-modal') {
-          validationErrors.audio = 'Audio recording is required';
-        }
-      }
+	  switch (currentStep) {
+		case 1: // Observation Type
+		  if (!observationType) {
+			validationErrors.observationType = 'Please select an observation type';
+			currentStepValid = false;
+		  }
+		  break;
   
-      // Location validation
-      if (!location) {
-        validationErrors.location = 'Location is required';
-      }
+		case 2: // Media Capture
+		  if (observationType === 'visual' && selectedImages.length === 0) {
+			validationErrors.images = 'Visual observations require at least one image';
+			currentStepValid = false;
+		  }
+		  if (observationType === 'audio' && !audioRecording) {
+			validationErrors.audio = 'Audio observations require an audio recording';
+			currentStepValid = false;
+		  }
+		  if (observationType === 'multi-modal' && selectedImages.length === 0 && !audioRecording) {
+			validationErrors.media = 'Multi-modal observations require images or audio';
+			currentStepValid = false;
+		  }
+		  break;
   
-      // Species validation (optional but recommended)
-      if (!speciesName.trim()) {
-        validationErrors.species = 'Species identification helps with research';
-      }
+		case 3: // Location & Species
+		  if (!location) {
+			validationErrors.location = 'Location is required';
+			currentStepValid = false;
+		  }
+		  if (!selectedSpecies) {
+			validationErrors.species = 'Species identification is required';
+			currentStepValid = false;
+		  }
+		  break;
   
-      return Object.keys(validationErrors).length === 0;
-    }
+		case 4: // Additional Details
+		  // All fields are optional, so this step is always valid
+		  break;
   
-    function handleObservationTypeChange(newType: ObservationType) {
-      observationType = newType;
-      dispatch('typeChanged', newType);
-      
-      // Auto-advance to next step
-      if (currentStep === 1) {
-        currentStep = 2;
-      }
-    }
+		case 5: // Review
+		  // Validate entire form
+		  const formData: Partial<ObservationFormData> = {
+			observation_type: observationType,
+			species_name: selectedSpecies?.common_name || '',
+			scientific_name: selectedSpecies?.scientific_name,
+			location,
+			images: selectedImages.length > 0 ? selectedImages : undefined,
+			audio_recording: audioRecording || undefined,
+			notes: notes.trim() || undefined,
+			description: description.trim() || undefined,
+			count,
+			confidence,
+			weather_conditions: weatherConditions.trim() || undefined,
+			habitat_description: habitatDescription.trim() || undefined,
+			behavior_notes: behaviorNotes.trim() || undefined,
+			tags: tags.length > 0 ? tags : undefined
+		  };
   
-    function handleAudioRecording(event: CustomEvent<AudioRecording>) {
-      audioRecording = event.detail;
-      
-      // Auto-switch to audio or multi-modal if not already selected
-      if (observationType === 'visual' && !selectedImages.length) {
-        handleObservationTypeChange('audio');
-      } else if (observationType === 'visual' && selectedImages.length > 0) {
-        handleObservationTypeChange('multi-modal');
-      }
-    }
+		  const validation = validateObservationForm(formData);
+		  if (!validation.isValid) {
+			validationErrors = validation.errors;
+			currentStepValid = false;
+		  }
+		  break;
+	  }
   
-    function handleImageUpload(event: CustomEvent<File[]>) {
-      selectedImages = event.detail;
-      
-      // Auto-switch to visual or multi-modal if not already selected
-      if (observationType === 'audio' && !audioRecording) {
-        handleObservationTypeChange('visual');
-      } else if (observationType === 'audio' && audioRecording) {
-        handleObservationTypeChange('multi-modal');
-      }
-    }
+	  dispatch('stepChanged', { step: currentStep, isValid: currentStepValid });
+	}
   
-    function handleLocationSelect(event: CustomEvent<Location>) {
-      location = event.detail;
-    }
+	// Navigation functions
+	function nextStep() {
+	  if (currentStepValid && currentStep < totalSteps) {
+		currentStep++;
+		validateCurrentStep();
+	  }
+	}
   
-    function handleSpeciesSelect(event: CustomEvent<SpeciesSearchResult>) {
-      selectedSpecies = event.detail;
-      speciesName = event.detail.common_name;
-    }
+	function previousStep() {
+	  if (currentStep > 1) {
+		currentStep--;
+		validateCurrentStep();
+	  }
+	}
   
-    function nextStep() {
-      if (currentStep < totalSteps) {
-        currentStep++;
-      }
-    }
+	function goToStep(step: number) {
+	  if (step >= 1 && step <= totalSteps) {
+		currentStep = step;
+		validateCurrentStep();
+	  }
+	}
   
-    function prevStep() {
-      if (currentStep > 1) {
-        currentStep--;
-      }
-    }
+	// Form submission
+	async function handleSubmit() {
+	  if (!currentStepValid) return;
   
-    async function submitForm() {
-      if (!isValid || isSubmitting) return;
+	  isSubmitting = true;
+	  uiStore.setLoading(true);
   
-      isSubmitting = true;
-      uiStore.setLoading('loading');
+	  try {
+		const formData: ObservationFormData = {
+		  observation_type: observationType,
+		  species_name: selectedSpecies?.common_name || '',
+		  scientific_name: selectedSpecies?.scientific_name,
+		  location: location!,
+		  images: selectedImages.length > 0 ? selectedImages : undefined,
+		  audio_recording: audioRecording || undefined,
+		  notes: notes.trim() || undefined,
+		  description: description.trim() || undefined,
+		  count,
+		  confidence,
+		  weather_conditions: weatherConditions.trim() || undefined,
+		  habitat_description: habitatDescription.trim() || undefined,
+		  behavior_notes: behaviorNotes.trim() || undefined,
+		  tags: tags.length > 0 ? tags : undefined
+		};
   
-      try {
-        const formData: ObservationFormData = {
-          observation_type: observationType,
-          species_name: speciesName,
-          description: description.trim(),
-          location: location!,
-          audio_recording: audioRecording || undefined,
-          images: selectedImages.length > 0 ? selectedImages : undefined,
-          weather_conditions: weatherConditions.trim() || undefined,
-          habitat_type: habitatType.trim() || undefined,
-          call_type: callType.trim() || undefined,
-          confidence
-        };
+		dispatch('submit', formData);
+	  } catch (error) {
+		console.error('Form submission error:', error);
+		uiStore.showNotification('error', 'Failed to submit observation. Please try again.');
+	  } finally {
+		isSubmitting = false;
+		uiStore.setLoading(false);
+	  }
+	}
   
-        dispatch('submit', formData);
-        
-        uiStore.showNotification('success', 'Observation submitted successfully!');
-        resetForm();
-        
-      } catch (error) {
-        console.error('Form submission error:', error);
-        uiStore.showNotification('error', 'Failed to submit observation. Please try again.');
-      } finally {
-        isSubmitting = false;
-        uiStore.setLoading('idle');
-      }
-    }
+	// Event handlers
+	function handleImageUpload(event: CustomEvent<File[]>) {
+	  selectedImages = [...selectedImages, ...event.detail];
+	  validateCurrentStep();
+	}
   
-    function resetForm() {
-      observationType = 'visual';
-      speciesName = '';
-      description = '';
-      location = null;
-      audioRecording = null;
-      selectedImages = [];
-      weatherConditions = '';
-      habitatType = '';
-      callType = '';
-      confidence = 3;
-      currentStep = 1;
-      selectedSpecies = null;
-      validationErrors = {};
-    }
+	function handleImageError(event: CustomEvent<{ message: string }>) {
+	  uiStore.showNotification('error', event.detail.message);
+	}
   
-    function cancelForm() {
-      resetForm();
-      dispatch('cancel');
-    }
+	function handleImageRemoved(event: CustomEvent<{ file: File; index: number }>) {
+	  selectedImages = selectedImages.filter((_, i) => i !== event.detail.index);
+	  validateCurrentStep();
+	}
   
-    function getStepTitle(step: number): string {
-      switch (step) {
-        case 1: return 'Observation Type';
-        case 2: return 'Media Capture';
-        case 3: return 'Location & Species';
-        case 4: return 'Additional Details';
-        case 5: return 'Review & Submit';
-        default: return 'Step ' + step;
-      }
-    }
+	function handleAudioRecording(event: CustomEvent<AudioRecording>) {
+	  audioRecording = event.detail;
+	  validateCurrentStep();
+	}
+  
+	function handleAudioCleared() {
+	  audioRecording = null;
+	  validateCurrentStep();
+	}
+  
+	function handleLocationSelected(event: CustomEvent<Location>) {
+	  location = event.detail;
+	  validateCurrentStep();
+	}
+  
+	function handleLocationCleared() {
+	  location = undefined;
+	  validateCurrentStep();
+	}
+  
+	function handleSpeciesSelect(event: CustomEvent<SpeciesSearchResult>) {
+	  selectedSpecies = event.detail;
+	  validateCurrentStep();
+	}
+  
+	function handleSpeciesCleared() {
+	  selectedSpecies = null;
+	  validateCurrentStep();
+	}
+  
+	// Tag management
+	function addTag(tag: string) {
+	  const trimmedTag = tag.trim().toLowerCase();
+	  if (trimmedTag && !tags.includes(trimmedTag)) {
+		tags = [...tags, trimmedTag];
+	  }
+	}
+  
+	function removeTag(index: number) {
+	  tags = tags.filter((_, i) => i !== index);
+	}
+  
+	// Handle tag input
+	function handleTagInput(event: KeyboardEvent) {
+	  const target = event.target as HTMLInputElement;
+	  if (event.key === 'Enter' && target.value.trim()) {
+		event.preventDefault();
+		addTag(target.value);
+		target.value = '';
+	  }
+	}
+  
+	// Calculate progress percentage
+	$: progressPercentage = (currentStep / totalSteps) * 100;
+  
+	// Reactive validation
+	$: {
+	  // Re-validate when key values change
+	  observationType;
+	  selectedImages;
+	  audioRecording;
+	  location;
+	  selectedSpecies;
+	  validateCurrentStep();
+	}
   </script>
   
-  <!-- Observation Form Component -->
-  <div class="observation-form max-w-4xl mx-auto bg-white rounded-xl shadow-nature-lg border border-primary-forest/10">
-    <!-- Form Header -->
-    <div class="form-header bg-gradient-to-r from-primary-forest to-primary-sky text-white p-6 rounded-t-xl">
-      <h2 class="text-2xl font-bold mb-2">🌿 Record New Observation</h2>
-      <p class="text-primary-sky/80">Contribute to wildlife research and conservation</p>
-      
-      <!-- Progress Bar -->
-      <div class="progress-bar mt-4">
-        <div class="flex justify-between items-center mb-2">
-          <span class="text-sm">Step {currentStep} of {totalSteps}</span>
-          <span class="text-sm">{getStepTitle(currentStep)}</span>
-        </div>
-        <div class="progress-track bg-white/20 rounded-full h-2">
-          <div 
-            class="progress-fill bg-secondary-goldenrod rounded-full h-2 transition-all duration-300"
-            style="width: {(currentStep / totalSteps) * 100}%"
-          ></div>
-        </div>
-      </div>
-    </div>
+  <div class="observation-form">
+	<!-- Progress Header -->
+	<div class="progress-header mb-8">
+	  <div class="flex justify-between items-center mb-4">
+		<h2 class="text-2xl font-bold text-primary-forest">New Observation</h2>
+		<div class="text-sm text-gray-500">
+		  Step {currentStep} of {totalSteps}
+		</div>
+	  </div>
+	  
+	  <!-- Progress Bar -->
+	  <div class="progress-bar w-full bg-gray-200 rounded-full h-2">
+		<div 
+		  class="bg-primary-forest h-2 rounded-full transition-all duration-300"
+		  style="width: {progressPercentage}%"
+		></div>
+	  </div>
   
-    <!-- Form Content -->
-    <div class="form-content p-6">
-      <!-- Step 1: Observation Type Selection -->
-      {#if currentStep === 1}
-        <div class="step step-type" in:slide="{{ duration: 300 }}">
-          <h3 class="text-xl font-semibold text-primary-forest mb-4">What type of observation are you making?</h3>
-          
-          <div class="type-grid grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button
-              class="type-option p-6 border-2 rounded-xl transition-all duration-200 {observationType === 'visual' ? 'border-primary-forest bg-primary-forest/5' : 'border-gray-200 hover:border-primary-forest/40'}"
-              on:click={() => handleObservationTypeChange('visual')}
-            >
-              <Camera class="w-12 h-12 mx-auto mb-3 text-primary-forest" />
-              <h4 class="font-semibold text-primary-forest mb-2">📷 Visual</h4>
-              <p class="text-sm text-neutral-stone-gray">Photograph wildlife, plants, or nature scenes</p>
-            </button>
-            
-            <button
-              class="type-option p-6 border-2 rounded-xl transition-all duration-200 {observationType === 'audio' ? 'border-primary-forest bg-primary-forest/5' : 'border-gray-200 hover:border-primary-forest/40'}"
-              on:click={() => handleObservationTypeChange('audio')}
-            >
-              <Mic class="w-12 h-12 mx-auto mb-3 text-primary-forest" />
-              <h4 class="font-semibold text-primary-forest mb-2">🎵 Audio</h4>
-              <p class="text-sm text-neutral-stone-gray">Record bird songs, frog calls, or nature sounds</p>
-            </button>
-            
-            <button
-              class="type-option p-6 border-2 rounded-xl transition-all duration-200 {observationType === 'multi-modal' ? 'border-primary-forest bg-primary-forest/5' : 'border-gray-200 hover:border-primary-forest/40'}"
-              on:click={() => handleObservationTypeChange('multi-modal')}
-            >
-              <div class="flex justify-center mb-3">
-                <Camera class="w-8 h-8 text-primary-forest" />
-                <Mic class="w-8 h-8 text-primary-forest ml-1" />
-              </div>
-              <h4 class="font-semibold text-primary-forest mb-2">🎭 Multi-Modal</h4>
-              <p class="text-sm text-neutral-stone-gray">Combine photos and audio for complete documentation</p>
-            </button>
-          </div>
+	  <!-- Step Indicators -->
+	  <div class="step-indicators flex justify-between mt-4">
+		{#each Array(totalSteps) as _, i}
+		  <button
+			type="button"
+			on:click={() => goToStep(i + 1)}
+			class="step-indicator flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors
+			  {currentStep === i + 1 
+				? 'bg-primary-forest text-white' 
+				: currentStep > i + 1 
+				  ? 'bg-green-600 text-white' 
+				  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}"
+		  >
+			{#if currentStep > i + 1}
+			  <CheckCircle class="w-4 h-4" />
+			{:else}
+			  {i + 1}
+			{/if}
+		  </button>
+		{/each}
+	  </div>
+	</div>
   
-          {#if validationErrors.observationType}
-            <p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
-              <AlertCircle class="w-4 h-4" />
-              {validationErrors.observationType}
-            </p>
-          {/if}
-        </div>
-      {/if}
+	<!-- Step Content -->
+	<div class="step-content">
+	  <!-- Step 1: Observation Type -->
+	  {#if currentStep === 1}
+		<div class="step step-type" in:slide={{ duration: 300 }}>
+		  <h3 class="text-xl font-semibold text-primary-forest mb-4">What type of observation are you making?</h3>
+		  
+		  <div class="observation-types grid grid-cols-1 md:grid-cols-3 gap-4">
+			<label class="observation-type-card">
+			  <input
+				type="radio"
+				bind:group={observationType}
+				value="visual"
+				class="sr-only"
+			  />
+			  <div class="card p-6 border-2 rounded-lg cursor-pointer transition-all
+				{observationType === 'visual' 
+				  ? 'border-primary-forest bg-primary-forest/5' 
+				  : 'border-gray-200 hover:border-primary-forest/50'}"
+			  >
+				<Camera class="w-12 h-12 mx-auto mb-3 text-primary-forest" />
+				<h4 class="font-semibold text-primary-forest mb-2">📷 Visual</h4>
+				<p class="text-sm text-gray-600">Photograph-based observations using images</p>
+			  </div>
+			</label>
   
-      <!-- Step 2: Media Capture -->
-      {#if currentStep === 2}
-        <div class="step step-media" in:slide="{{ duration: 300 }}">
-          <h3 class="text-xl font-semibold text-primary-forest mb-4">Capture Your Observation</h3>
-          
-          <!-- Audio Recording Section -->
-          {#if observationType === 'audio' || observationType === 'multi-modal'}
-            <section class="audio-section mb-6">
-              <h4 class="text-lg font-medium text-primary-forest mb-3 flex items-center gap-2">
-                🎤 Audio Recording
-              </h4>
-              <p class="text-neutral-stone-gray mb-4">Record bird songs, frog calls, insect sounds, or mammal vocalizations</p>
-              
-              <AudioRecorder 
-                maxDuration={60}
-                enableVisualization={true}
-                showWaveform={true}
-                showSpectrogram={true}
-                on:recordingComplete={handleAudioRecording}
-                on:error={(e) => uiStore.showNotification('error', e.detail.message)}
-              />
-              
-              {#if validationErrors.audio}
-                <p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
-                  <AlertCircle class="w-4 h-4" />
-                  {validationErrors.audio}
-                </p>
-              {/if}
-            </section>
-          {/if}
+			<label class="observation-type-card">
+			  <input
+				type="radio"
+				bind:group={observationType}
+				value="audio"
+				class="sr-only"
+			  />
+			  <div class="card p-6 border-2 rounded-lg cursor-pointer transition-all
+				{observationType === 'audio' 
+				  ? 'border-primary-forest bg-primary-forest/5' 
+				  : 'border-gray-200 hover:border-primary-forest/50'}"
+			  >
+				<Mic class="w-12 h-12 mx-auto mb-3 text-primary-forest" />
+				<h4 class="font-semibold text-primary-forest mb-2">🎵 Audio</h4>
+				<p class="text-sm text-gray-600">Sound-based observations using audio recordings</p>
+			  </div>
+			</label>
   
-          <!-- Image Upload Section -->
-          {#if observationType === 'visual' || observationType === 'multi-modal'}
-            <section class="image-section">
-              <h4 class="text-lg font-medium text-primary-forest mb-3 flex items-center gap-2">
-                📷 Visual Documentation
-              </h4>
-              <p class="text-neutral-stone-gray mb-4">Upload clear photos showing identifying features</p>
-              
-              <ImageUpload 
-                maxFiles={5}
-                acceptedTypes={['image/jpeg', 'image/png', 'image/webp']}
-                maxSizePerFile={10 * 1024 * 1024}
-                on:filesSelected={handleImageUpload}
-                on:error={(e) => uiStore.showNotification('error', e.detail.message)}
-              />
-              
-              {#if validationErrors.images}
-                <p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
-                  <AlertCircle class="w-4 h-4" />
-                  {validationErrors.images}
-                </p>
-              {/if}
-            </section>
-          {/if}
-        </div>
-      {/if}
+			<label class="observation-type-card">
+			  <input
+				type="radio"
+				bind:group={observationType}
+				value="multi-modal"
+				class="sr-only"
+			  />
+			  <div class="card p-6 border-2 rounded-lg cursor-pointer transition-all
+				{observationType === 'multi-modal' 
+				  ? 'border-primary-forest bg-primary-forest/5' 
+				  : 'border-gray-200 hover:border-primary-forest/50'}"
+			  >
+				<div class="flex justify-center mb-3">
+				  <Camera class="w-8 h-8 text-primary-forest" />
+				  <Mic class="w-8 h-8 text-primary-forest ml-1" />
+				</div>
+				<h4 class="font-semibold text-primary-forest mb-2">🎬 Multi-modal</h4>
+				<p class="text-sm text-gray-600">Combine both visual and audio elements</p>
+			  </div>
+			</label>
+		  </div>
   
-      <!-- Step 3: Location & Species -->
-      {#if currentStep === 3}
-        <div class="step step-location-species" in:slide="{{ duration: 300 }}">
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Location Section -->
-            <section class="location-section">
-              <h4 class="text-lg font-medium text-primary-forest mb-3 flex items-center gap-2">
-                📍 Location
-              </h4>
-              <p class="text-neutral-stone-gray mb-4">Where did you make this observation?</p>
-              
-              <LocationPicker 
-                initialLocation={location}
-                enableGPS={true}
-                showMap={true}
-                on:locationSelected={handleLocationSelect}
-              />
-              
-              {#if validationErrors.location}
-                <p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
-                  <AlertCircle class="w-4 h-4" />
-                  {validationErrors.location}
-                </p>
-              {/if}
-            </section>
+		  {#if validationErrors.observationType}
+			<p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
+			  <AlertCircle class="w-4 h-4" />
+			  {validationErrors.observationType}
+			</p>
+		  {/if}
+		</div>
+	  {/if}
   
-            <!-- Species Section -->
-            <section class="species-section">
-              <h4 class="text-lg font-medium text-primary-forest mb-3 flex items-center gap-2">
-                🦋 Species Identification
-              </h4>
-              <p class="text-neutral-stone-gray mb-4">Help identify the species (optional but valuable for research)</p>
-              
-              <SpeciesSelector 
-                observationType={observationType}
-                location={location}
-                audioFeatures={audioRecording?.spectrogram_data}
-                on:speciesSelected={handleSpeciesSelect}
-              />
-              
-              <!-- Manual species input -->
-              <div class="manual-input mt-4">
-                <label for="species-name" class="block text-sm font-medium text-neutral-stone-gray mb-2">
-                  Or enter species name manually:
-                </label>
-                <input
-                  id="species-name"
-                  type="text"
-                  bind:value={speciesName}
-                  placeholder="e.g., American Robin, Red-eyed Tree Frog"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-transparent"
-                />
-              </div>
-              
-              {#if validationErrors.species}
-                <p class="warning-message text-secondary-goldenrod text-sm mt-2 flex items-center gap-1">
-                  <AlertCircle class="w-4 h-4" />
-                  {validationErrors.species}
-                </p>
-              {/if}
-            </section>
-          </div>
-        </div>
-      {/if}
+	  <!-- Step 2: Media Capture -->
+	  {#if currentStep === 2}
+		<div class="step step-media" in:slide={{ duration: 300 }}>
+		  <h3 class="text-xl font-semibold text-primary-forest mb-4">Capture Your Observation</h3>
+		  
+		  <div class="media-capture space-y-6">
+			<!-- Visual Capture -->
+			{#if observationType === 'visual' || observationType === 'multi-modal'}
+			  <div class="image-section">
+				<ImageUpload
+				  bind:files={selectedImages}
+				  maxFiles={5}
+				  required={observationType === 'visual'}
+				  label="Images"
+				  on:filesSelected={handleImageUpload}
+				  on:fileRemoved={handleImageRemoved}
+				  on:error={handleImageError}
+				/>
+				
+				{#if validationErrors.images}
+				  <p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
+					<AlertCircle class="w-4 h-4" />
+					{validationErrors.images}
+				  </p>
+				{/if}
+			  </div>
+			{/if}
   
-      <!-- Step 4: Additional Details -->
-      {#if currentStep === 4}
-        <div class="step step-details" in:slide="{{ duration: 300 }}">
-          <h3 class="text-xl font-semibold text-primary-forest mb-4">Additional Details</h3>
-          <p class="text-neutral-stone-gray mb-6">Provide context to help with species identification and research</p>
-          
-          <div class="details-grid grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Description -->
-            <div class="col-span-2">
-              <label for="description" class="block text-sm font-medium text-neutral-stone-gray mb-2">
-                Description
-              </label>
-              <textarea
-                id="description"
-                bind:value={description}
-                placeholder="Describe behavior, appearance, habitat, or any notable observations..."
-                rows="4"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-transparent resize-none"
-              ></textarea>
-            </div>
+			<!-- Audio Capture -->
+			{#if observationType === 'audio' || observationType === 'multi-modal'}
+			  <div class="audio-section">
+				<AudioRecorder
+				  bind:recording={audioRecording}
+				  maxDuration={300}
+				  required={observationType === 'audio'}
+				  on:recordingStopped={handleAudioRecording}
+				  on:recordingCleared={handleAudioCleared}
+				/>
+				
+				{#if validationErrors.audio}
+				  <p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
+					<AlertCircle class="w-4 h-4" />
+					{validationErrors.audio}
+				  </p>
+				{/if}
+			  </div>
+			{/if}
   
-            <!-- Weather Conditions -->
-            <div>
-              <label for="weather" class="block text-sm font-medium text-neutral-stone-gray mb-2">
-                Weather Conditions
-              </label>
-              <select
-                id="weather"
-                bind:value={weatherConditions}
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-transparent"
-              >
-                <option value="">Select weather...</option>
-                <option value="sunny">☀️ Sunny</option>
-                <option value="partly-cloudy">⛅ Partly Cloudy</option>
-                <option value="cloudy">☁️ Cloudy</option>
-                <option value="rainy">🌧️ Rainy</option>
-                <option value="foggy">🌫️ Foggy</option>
-                <option value="windy">💨 Windy</option>
-              </select>
-            </div>
+			{#if validationErrors.media}
+			  <p class="error-message text-red-600 text-sm flex items-center gap-1">
+				<AlertCircle class="w-4 h-4" />
+				{validationErrors.media}
+			  </p>
+			{/if}
+		  </div>
+		</div>
+	  {/if}
   
-            <!-- Habitat Type -->
-            <div>
-              <label for="habitat" class="block text-sm font-medium text-neutral-stone-gray mb-2">
-                Habitat Type
-              </label>
-              <select
-                id="habitat"
-                bind:value={habitatType}
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-transparent"
-              >
-                <option value="">Select habitat...</option>
-                <option value="forest">🌲 Forest</option>
-                <option value="wetland">🏞️ Wetland</option>
-                <option value="grassland">🌾 Grassland</option>
-                <option value="urban">🏙️ Urban</option>
-                <option value="coastal">🏖️ Coastal</option>
-                <option value="mountain">⛰️ Mountain</option>
-                <option value="desert">🏜️ Desert</option>
-              </select>
-            </div>
+	  <!-- Step 3: Location & Species -->
+	  {#if currentStep === 3}
+		<div class="step step-location-species" in:slide={{ duration: 300 }}>
+		  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+			<!-- Location Picker -->
+			<div class="location-section">
+			  <LocationPicker
+				bind:location
+				required={true}
+				on:locationSelected={handleLocationSelected}
+				on:locationCleared={handleLocationCleared}
+			  />
+			  
+			  {#if validationErrors.location}
+				<p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
+				  <AlertCircle class="w-4 h-4" />
+				  {validationErrors.location}
+				</p>
+			  {/if}
+			</div>
   
-            <!-- Call Type (for audio observations) -->
-            {#if observationType === 'audio' || observationType === 'multi-modal'}
-              <div>
-                <label for="call-type" class="block text-sm font-medium text-neutral-stone-gray mb-2">
-                  Call/Sound Type
-                </label>
-                <select
-                  id="call-type"
-                  bind:value={callType}
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-transparent"
-                >
-                  <option value="">Select call type...</option>
-                  <option value="song">🎵 Song</option>
-                  <option value="call">📢 Call</option>
-                  <option value="alarm">⚠️ Alarm</option>
-                  <option value="territorial">🚩 Territorial</option>
-                  <option value="mating">❤️ Mating</option>
-                  <option value="contact">📞 Contact</option>
-                </select>
-              </div>
-            {/if}
+			<!-- Species Selector -->
+			<div class="species-section">
+			  <SpeciesSelector
+				bind:selectedSpecies
+				{location}
+				{observationType}
+				audioFeatures={audioRecording?.spectrogram_data?.frequency_data?.[0]}
+				on:speciesSelected={handleSpeciesSelect}
+				on:speciesCleared={handleSpeciesCleared}
+			  />
+			  
+			  {#if validationErrors.species}
+				<p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
+				  <AlertCircle class="w-4 h-4" />
+				  {validationErrors.species}
+				</p>
+			  {/if}
+			</div>
+		  </div>
+		</div>
+	  {/if}
   
-            <!-- Confidence Level -->
-            <div>
-              <label for="confidence" class="block text-sm font-medium text-neutral-stone-gray mb-2">
-                Confidence Level: {confidence}/5
-              </label>
-              <input
-                id="confidence"
-                type="range"
-                min="1"
-                max="5"
-                bind:value={confidence}
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-              />
-              <div class="flex justify-between text-xs text-neutral-stone-gray mt-1">
-                <span>Uncertain</span>
-                <span>Very Confident</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      {/if}
+	  <!-- Step 4: Additional Details -->
+	  {#if currentStep === 4}
+		<div class="step step-details" in:slide={{ duration: 300 }}>
+		  <h3 class="text-xl font-semibold text-primary-forest mb-4">Additional Details</h3>
+		  
+		  <div class="details-form space-y-6">
+			<!-- Basic Details -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			  <div>
+				<label for="count" class="block text-sm font-medium text-gray-700 mb-2">
+				  Number of Individuals
+				</label>
+				<input
+				  id="count"
+				  type="number"
+				  bind:value={count}
+				  min="1"
+				  max="1000"
+				  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+				/>
+			  </div>
   
-      <!-- Step 5: Review & Submit -->
-      {#if currentStep === 5}
-        <div class="step step-review" in:slide="{{ duration: 300 }}">
-          <h3 class="text-xl font-semibold text-primary-forest mb-4">Review Your Observation</h3>
-          <p class="text-neutral-stone-gray mb-6">Please review your observation before submitting</p>
-          
-          <div class="review-summary bg-neutral-off-white border border-primary-forest/10 rounded-lg p-6">
-            <div class="summary-grid grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Basic Info -->
-              <div>
-                <h4 class="font-medium text-primary-forest mb-3">Basic Information</h4>
-                <dl class="space-y-2 text-sm">
-                  <div class="flex justify-between">
-                    <dt class="text-neutral-stone-gray">Type:</dt>
-                    <dd class="font-medium capitalize">{observationType}</dd>
-                  </div>
-                  <div class="flex justify-between">
-                    <dt class="text-neutral-stone-gray">Species:</dt>
-                    <dd class="font-medium">{speciesName || 'Not specified'}</dd>
-                  </div>
-                  <div class="flex justify-between">
-                    <dt class="text-neutral-stone-gray">Confidence:</dt>
-                    <dd class="font-medium">{confidence}/5</dd>
-                  </div>
-                </dl>
-              </div>
+			  <div>
+				<label for="confidence" class="block text-sm font-medium text-gray-700 mb-2">
+				  Identification Confidence (1-5)
+				</label>
+				<select
+				  id="confidence"
+				  bind:value={confidence}
+				  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+				>
+				  <option value={1}>1 - Very Uncertain</option>
+				  <option value={2}>2 - Somewhat Uncertain</option>
+				  <option value={3}>3 - Moderately Confident</option>
+				  <option value={4}>4 - Very Confident</option>
+				  <option value={5}>5 - Absolutely Certain</option>
+				</select>
+			  </div>
+			</div>
   
-              <!-- Media Summary -->
-              <div>
-                <h4 class="font-medium text-primary-forest mb-3">Media</h4>
-                <div class="space-y-2 text-sm">
-                  {#if selectedImages.length > 0}
-                    <p class="flex items-center gap-2">
-                      <Camera class="w-4 h-4" />
-                      {selectedImages.length} image(s)
-                    </p>
-                  {/if}
-                  {#if audioRecording}
-                    <p class="flex items-center gap-2">
-                      <Mic class="w-4 h-4" />
-                      Audio recording ({audioRecording.duration.toFixed(1)}s)
-                    </p>
-                  {/if}
-                </div>
-              </div>
+			<!-- Description -->
+			<div>
+			  <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+				Description
+			  </label>
+			  <textarea
+				id="description"
+				bind:value={description}
+				rows="3"
+				placeholder="Describe what you observed (appearance, behavior, etc.)"
+				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+			  ></textarea>
+			</div>
   
-              <!-- Location -->
-              <div>
-                <h4 class="font-medium text-primary-forest mb-3">Location</h4>
-                {#if location}
-                  <p class="text-sm text-neutral-stone-gray">
-                    {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-                    {#if location.region}
-                      <br />{location.region}
-                    {/if}
-                  </p>
-                {/if}
-              </div>
+			<!-- Environmental Conditions -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			  <div>
+				<label for="weather" class="block text-sm font-medium text-gray-700 mb-2">
+				  Weather Conditions
+				</label>
+				<input
+				  id="weather"
+				  type="text"
+				  bind:value={weatherConditions}
+				  placeholder="e.g., sunny, cloudy, rainy"
+				  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+				/>
+			  </div>
   
-              <!-- Environmental Context -->
-              <div>
-                <h4 class="font-medium text-primary-forest mb-3">Environment</h4>
-                <dl class="space-y-1 text-sm">
-                  {#if weatherConditions}
-                    <div class="flex justify-between">
-                      <dt class="text-neutral-stone-gray">Weather:</dt>
-                      <dd class="capitalize">{weatherConditions}</dd>
-                    </div>
-                  {/if}
-                  {#if habitatType}
-                    <div class="flex justify-between">
-                      <dt class="text-neutral-stone-gray">Habitat:</dt>
-                      <dd class="capitalize">{habitatType}</dd>
-                    </div>
-                  {/if}
-                  {#if callType}
-                    <div class="flex justify-between">
-                      <dt class="text-neutral-stone-gray">Call Type:</dt>
-                      <dd class="capitalize">{callType}</dd>
-                    </div>
-                  {/if}
-                </dl>
-              </div>
-            </div>
+			  <div>
+				<label for="habitat" class="block text-sm font-medium text-gray-700 mb-2">
+				  Habitat Description
+				</label>
+				<input
+				  id="habitat"
+				  type="text"
+				  bind:value={habitatDescription}
+				  placeholder="e.g., oak forest, wetland, urban park"
+				  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+				/>
+			  </div>
+			</div>
   
-            {#if description}
-              <div class="mt-6 pt-6 border-t border-primary-forest/10">
-                <h4 class="font-medium text-primary-forest mb-2">Description</h4>
-                <p class="text-sm text-neutral-stone-gray">{description}</p>
-              </div>
-            {/if}
-          </div>
+			<!-- Behavior Notes -->
+			<div>
+			  <label for="behavior" class="block text-sm font-medium text-gray-700 mb-2">
+				Behavior Notes
+			  </label>
+			  <textarea
+				id="behavior"
+				bind:value={behaviorNotes}
+				rows="2"
+				placeholder="Describe any interesting behaviors you observed"
+				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+			  ></textarea>
+			</div>
   
-          <!-- Validation Errors -->
-          {#if !isValid}
-            <div class="validation-errors mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <h4 class="font-medium text-red-700 mb-2 flex items-center gap-2">
-                <AlertCircle class="w-4 h-4" />
-                Please fix the following issues:
-              </h4>
-              <ul class="text-sm text-red-600 space-y-1">
-                {#each Object.values(validationErrors) as error}
-                  <li>• {error}</li>
-                {/each}
-              </ul>
-            </div>
-          {/if}
-        </div>
-      {/if}
-    </div>
+			<!-- Tags -->
+			<div>
+			  <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">
+				Tags
+			  </label>
+			  <div class="flex flex-wrap gap-2 mb-2">
+				{#each tags as tag, index}
+				  <span class="inline-flex items-center gap-1 px-2 py-1 bg-primary-forest/10 text-primary-forest text-sm rounded-full">
+					{tag}
+					<button
+					  type="button"
+					  on:click={() => removeTag(index)}
+					  class="hover:text-red-600"
+					>
+					  ×
+					</button>
+				  </span>
+				{/each}
+			  </div>
+			  <input
+				type="text"
+				placeholder="Add tags (press Enter to add)"
+				on:keydown={handleTagInput}
+				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+			  />
+			</div>
   
-    <!-- Form Footer -->
-    <div class="form-footer bg-neutral-off-white border-t border-primary-forest/10 p-6 rounded-b-xl">
-      <div class="flex justify-between items-center">
-        <!-- Previous Button -->
-        <button
-          type="button"
-          on:click={prevStep}
-          disabled={currentStep === 1}
-          class="prev-btn px-6 py-2 border border-gray-300 text-neutral-stone-gray rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          Previous
-        </button>
+			<!-- Additional Notes -->
+			<div>
+			  <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+				Additional Notes
+			  </label>
+			  <textarea
+				id="notes"
+				bind:value={notes}
+				rows="4"
+				placeholder="Any other observations or notes..."
+				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+			  ></textarea>
+			</div>
+		  </div>
+		</div>
+	  {/if}
   
-        <!-- Step Navigation -->
-        <div class="step-dots flex gap-2">
-          {#each Array(totalSteps) as _, i}
-            <button
-              class="step-dot w-3 h-3 rounded-full transition-colors {i + 1 === currentStep ? 'bg-primary-forest' : i + 1 < currentStep ? 'bg-secondary-goldenrod' : 'bg-gray-300'}"
-              on:click={() => currentStep = i + 1}
-              aria-label="Go to step {i + 1}"
-            ></button>
-          {/each}
-        </div>
+	  <!-- Step 5: Review -->
+	  {#if currentStep === 5}
+		<div class="step step-review" in:slide={{ duration: 300 }}>
+		  <h3 class="text-xl font-semibold text-primary-forest mb-4">Review Your Observation</h3>
+		  
+		  <div class="review-content space-y-6">
+			<!-- Observation Summary -->
+			<div class="summary-card p-6 bg-gray-50 rounded-lg">
+			  <h4 class="font-semibold text-gray-800 mb-4">Observation Summary</h4>
+			  
+			  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div>
+				  <span class="text-sm text-gray-600">Type:</span>
+				  <p class="font-medium capitalize">{observationType}</p>
+				</div>
+				
+				<div>
+				  <span class="text-sm text-gray-600">Species:</span>
+				  <p class="font-medium">{selectedSpecies?.common_name}</p>
+				  {#if selectedSpecies?.scientific_name}
+					<p class="text-sm italic text-gray-600">{selectedSpecies.scientific_name}</p>
+				  {/if}
+				</div>
   
-        <!-- Next/Submit Button -->
-        {#if currentStep < totalSteps}
-          <button
-            type="button"
-            on:click={nextStep}
-            disabled={currentStep === 2 && !hasMedia}
-            class="next-btn px-6 py-2 bg-primary-forest text-white rounded-lg hover:bg-primary-forest/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Next
-          </button>
-        {:else}
-          <button
-            type="button"
-            on:click={submitForm}
-            disabled={!isValid || isSubmitting}
-            class="submit-btn px-8 py-2 bg-secondary-goldenrod text-white rounded-lg hover:bg-secondary-goldenrod/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-          >
-            {#if isSubmitting}
-              <div class="spinner w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              Submitting...
-            {:else}
-              <CheckCircle class="w-4 h-4" />
-              Submit Observation
-            {/if}
-          </button>
-        {/if}
-      </div>
+				<div>
+				  <span class="text-sm text-gray-600">Location:</span>
+				  <p class="font-medium">{location?.region || 'Selected location'}</p>
+				  <p class="text-xs text-gray-500">
+					{location?.latitude.toFixed(6)}, {location?.longitude.toFixed(6)}
+				  </p>
+				</div>
   
-      <!-- Cancel Button -->
-      <div class="mt-4 text-center">
-        <button
-          type="button"
-          on:click={cancelForm}
-          class="cancel-btn text-sm text-neutral-stone-gray hover:text-red-600 transition-colors"
-        >
-          Cancel and Clear Form
-        </button>
-      </div>
-    </div>
+				<div>
+				  <span class="text-sm text-gray-600">Count:</span>
+				  <p class="font-medium">{count} individual{count !== 1 ? 's' : ''}</p>
+				</div>
+			  </div>
+			</div>
+  
+			<!-- Media Summary -->
+			<div class="media-summary">
+			  <h4 class="font-semibold text-gray-800 mb-3">Media</h4>
+			  <div class="flex flex-wrap gap-4">
+				{#if selectedImages.length > 0}
+				  <div class="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-lg">
+					<Camera class="w-4 h-4" />
+					{selectedImages.length} image(s)
+				  </div>
+				{/if}
+				
+				{#if audioRecording}
+				  <div class="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg">
+					<Mic class="w-4 h-4" />
+					Audio recording ({audioRecording.duration.toFixed(1)}s)
+				  </div>
+				{/if}
+			  </div>
+			</div>
+  
+			<!-- Details Summary -->
+			{#if description || weatherConditions || habitatDescription || behaviorNotes || tags.length > 0}
+			  <div class="details-summary">
+				<h4 class="font-semibold text-gray-800 mb-3">Additional Details</h4>
+				
+				{#if description}
+				  <div class="mb-3">
+					<span class="text-sm text-gray-600">Description:</span>
+					<p class="text-gray-800">{description}</p>
+				  </div>
+				{/if}
+  
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				  {#if weatherConditions}
+					<div>
+					  <span class="text-sm text-gray-600">Weather:</span>
+					  <p class="text-gray-800">{weatherConditions}</p>
+					</div>
+				  {/if}
+  
+				  {#if habitatDescription}
+					<div>
+					  <span class="text-sm text-gray-600">Habitat:</span>
+					  <p class="text-gray-800">{habitatDescription}</p>
+					</div>
+				  {/if}
+				</div>
+  
+				{#if behaviorNotes}
+				  <div class="mt-3">
+					<span class="text-sm text-gray-600">Behavior:</span>
+					<p class="text-gray-800">{behaviorNotes}</p>
+				  </div>
+				{/if}
+  
+				{#if tags.length > 0}
+				  <div class="mt-3">
+					<span class="text-sm text-gray-600">Tags:</span>
+					<div class="flex flex-wrap gap-2 mt-1">
+					  {#each tags as tag}
+						<span class="px-2 py-1 bg-primary-forest/10 text-primary-forest text-sm rounded-full">
+						  {tag}
+						</span>
+					  {/each}
+					</div>
+				  </div>
+				{/if}
+			  </div>
+			{/if}
+  
+			{#if notes}
+			  <div class="notes-summary">
+				<h4 class="font-semibold text-gray-800 mb-3">Notes</h4>
+				<p class="text-gray-700 whitespace-pre-wrap">{notes}</p>
+			  </div>
+			{/if}
+		  </div>
+  
+		  <!-- Validation Errors -->
+		  {#if !currentStepValid}
+			<div class="validation-summary mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+			  <h4 class="font-medium text-red-700 mb-2 flex items-center gap-2">
+				<AlertCircle class="w-4 h-4" />
+				Please fix the following issues:
+			  </h4>
+			  <ul class="text-red-600 text-sm space-y-1">
+				{#each Object.values(validationErrors) as error}
+				  <li>• {error}</li>
+				{/each}
+			  </ul>
+			</div>
+		  {/if}
+		</div>
+	  {/if}
+	</div>
+  
+	<!-- Navigation Buttons -->
+	<div class="navigation-buttons flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+	  <div>
+		{#if currentStep > 1}
+		  <button
+			type="button"
+			on:click={previousStep}
+			class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800"
+		  >
+			← Previous
+		  </button>
+		{/if}
+	  </div>
+  
+	  <div class="flex gap-3">
+		<button
+		  type="button"
+		  on:click={() => dispatch('cancel')}
+		  class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+		>
+		  Cancel
+		</button>
+  
+		{#if currentStep < totalSteps}
+		  <button
+			type="button"
+			on:click={nextStep}
+			disabled={!currentStepValid}
+			class="flex items-center gap-2 px-6 py-2 bg-primary-forest text-white rounded-lg hover:bg-primary-forest/90 disabled:opacity-50 disabled:cursor-not-allowed"
+		  >
+			Next →
+		  </button>
+		{:else}
+		  <button
+			type="button"
+			on:click={handleSubmit}
+			disabled={!currentStepValid || isSubmitting}
+			class="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+		  >
+			{#if isSubmitting}
+			  <div class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+			  Submitting...
+			{:else}
+			  <CheckCircle class="w-4 h-4" />
+			  Submit Observation
+			{/if}
+		  </button>
+		{/if}
+	  </div>
+	</div>
   </div>
   
   <style>
-    /* Step transitions */
-    .step {
-      animation: fadeInUp 0.3s ease-out;
-    }
+	.observation-form {
+	  max-width: 4xl;
+	  margin: 0 auto;
+	}
   
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+	.step-indicators {
+	  position: relative;
+	}
   
-    /* Custom range slider */
-    .slider::-webkit-slider-thumb {
-      appearance: none;
-      height: 20px;
-      width: 20px;
-      border-radius: 50%;
-      background: #2F5D50;
-      cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
+	.step-indicators::before {
+	  content: '';
+	  position: absolute;
+	  top: 50%;
+	  left: 0;
+	  right: 0;
+	  height: 2px;
+	  background-color: #e5e7eb;
+	  z-index: -1;
+	}
   
-    .slider::-moz-range-thumb {
-      height: 20px;
-      width: 20px;
-      border-radius: 50%;
-      background: #2F5D50;
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
+	.step-indicator {
+	  background-color: white;
+	  border: 2px solid;
+	}
   
-    /* Responsive design */
-    @media (max-width: 768px) {
-      .type-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .details-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .summary-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .form-footer {
-        flex-direction: column;
-        gap: 1rem;
-      }
-      
-      .step-dots {
-        order: -1;
-      }
-    }
+	.observation-type-card {
+	  display: block;
+	}
   
-    /* High contrast support */
-    @media (prefers-contrast: high) {
-      .type-option {
-        border-width: 3px;
-      }
-      
-      .form-header,
-      .submit-btn,
-      .next-btn {
-        border: 2px solid currentColor;
-      }
-    }
+	.card {
+	  height: 100%;
+	  text-align: center;
+	}
   
-    /* Reduced motion support */
-    @media (prefers-reduced-motion: reduce) {
-      .step,
-      .type-option,
-      .next-btn,
-      .submit-btn {
-        animation: none;
-        transition: none;
-      }
-      
-      .progress-fill {
-        transition: none;
-      }
-    }
+	.card:hover {
+	  transform: translateY(-2px);
+	  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	}
+  
+	.error-message {
+	  animation: shake 0.5s ease-in-out;
+	}
+  
+	@keyframes shake {
+	  0%, 100% { transform: translateX(0); }
+	  25% { transform: translateX(-5px); }
+	  75% { transform: translateX(5px); }
+	}
+  
+	/* Responsive adjustments */
+	@media (max-width: 768px) {
+	  .observation-types {
+		grid-template-columns: 1fr;
+	  }
+	  
+	  .step-indicators {
+		justify-content: space-around;
+	  }
+	  
+	  .navigation-buttons {
+		flex-direction: column;
+		gap: 1rem;
+	  }
+	}
+  
+	/* Focus styles */
+	button:focus,
+	input:focus,
+	textarea:focus,
+	select:focus {
+	  outline: 2px solid #065f46;
+	  outline-offset: 2px;
+	}
+  
+	/* Animation for step transitions */
+	.step {
+	  min-height: 400px;
+	}
+  
+	/* Summary card styling */
+	.summary-card {
+	  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+	}
+  
+	/* Tag styling */
+	.tags input {
+	  border: none;
+	  outline: none;
+	  background: transparent;
+	}
+  
+	/* Loading animation */
+	@keyframes spin {
+	  to {
+		transform: rotate(360deg);
+	  }
+	}
+  
+	.animate-spin {
+	  animation: spin 1s linear infinite;
+	}
   </style>

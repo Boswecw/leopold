@@ -2,73 +2,58 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { authStore, uiStore, audioStore } from '$lib/stores';
-	import { Menu, X, User, MapPin, Camera, Mic, Bell, Settings, LogOut } from 'lucide-svelte';
 	import '../app.css';
-  
+	
+	// Basic layout setup
 	let sidebarOpen = false;
-	let userMenuOpen = false;
-  
-	$: currentUser = $authStore;
-	$: notification = $uiStore.notification;
-	$: isAuthenticated = !!currentUser;
-	$: currentPath = $page.url.pathname;
-  
-	const navigation = [
-	  { name: 'Map', href: '/', icon: MapPin, current: false },
-	  { name: 'New Observation', href: '/observations/new', icon: Camera, current: false },
-	  { name: 'My Observations', href: '/observations/mine', icon: User, current: false },
-	  { name: 'Audio Tools', href: '/audio', icon: Mic, current: false },
-	];
-  
-	$: {
-	  navigation.forEach(item => {
-		item.current = item.href === currentPath || 
-		  (item.href !== '/' && currentPath.startsWith(item.href));
-	  });
-	}
-  
+	
 	onMount(() => {
-	  authStore.initialize();
-	  audioStore.initialize();
-  
-	  const handleKeydown = (e) => {
-
-		if (e.key === 'Escape') {
-		  sidebarOpen = false;
-		  userMenuOpen = false;
-		  uiStore.closeModal();
-		}
-		if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-		  e.preventDefault();
-		  // TODO: Trigger search
-		}
-	  };
-  
-	  document.addEventListener('keydown', handleKeydown);
-	  return () => document.removeEventListener('keydown', handleKeydown);
+	  // Basic initialization
 	});
-  
-	function toggleSidebar() {
-	  sidebarOpen = !sidebarOpen;
-	}
-  
-	function toggleUserMenu() {
-	  userMenuOpen = !userMenuOpen;
-	}
-  
-	function handleSignOut() {
-	  authStore.logout();
-	  userMenuOpen = false;
-	  uiStore.showNotification('success', 'Signed out successfully');
-	}
-  
-	function dismissNotification() {
-	  uiStore.clearNotification();
-	}
   </script>
   
-  <!-- You would then continue with the layout's HTML + slot + styling exactly as you had it... -->
-  <!-- For brevity, I’ve excluded the 400+ lines of nav, sidebar, notification markup & styles -->
-  <!-- You already have them organized — just paste it back in under this <script> block -->
+  <!-- Main layout structure -->
+  <div class="app-layout">
+	<!-- Header -->
+	<header class="app-header bg-nature-primary text-white p-4">
+	  <div class="container mx-auto flex items-center justify-between">
+		<h1 class="text-xl font-bold">🌿 Leopold Nature Observer</h1>
+		
+		<nav class="hidden md:flex gap-4">
+		  <a href="/" class="hover:underline">Home</a>
+		  <a href="/observations" class="hover:underline">Observations</a>
+		  <a href="/about" class="hover:underline">About</a>
+		</nav>
+		
+		<button 
+		  class="md:hidden"
+		  on:click={() => sidebarOpen = !sidebarOpen}
+		>
+		  ☰
+		</button>
+	  </div>
+	</header>
   
+	<!-- Main content area -->
+	<main class="app-main flex-1 min-h-screen">
+	  <!-- THIS IS THE CRITICAL MISSING PIECE -->
+	  <slot />
+	</main>
+  
+	<!-- Footer -->
+	<footer class="app-footer bg-neutral-stone-gray text-white p-4 text-center">
+	  <p>&copy; 2024 Leopold Nature Observer. Conservation through community science.</p>
+	</footer>
+  </div>
+  
+  <style>
+	.app-layout {
+	  display: flex;
+	  flex-direction: column;
+	  min-height: 100vh;
+	}
+	
+	.app-main {
+	  flex: 1;
+	}
+  </style>

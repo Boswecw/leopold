@@ -1,4 +1,3 @@
-<!-- src/routes/auth/signin/+page.svelte -->
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { page } from '$app/stores';
