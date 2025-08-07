@@ -1,4 +1,4 @@
-<!-- src/routes/+page.svelte - Clean JavaScript version -->
+<!-- src/routes/+page.svelte - Fixed version -->
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -6,7 +6,7 @@
   import { observationsStore, uiStore, authStore } from '$lib/stores';
   import { Plus, Map, List, Filter, Search, TrendingUp, Camera, Mic, MapPin, Calendar, Users } from 'lucide-svelte';
 
-  // Page state - no TypeScript annotations
+  // Page state - removed TypeScript annotations to fix parsing error
   let observations = [];
   let viewMode = 'map';
   let isLoading = true;
@@ -20,7 +20,12 @@
   let thisWeekCount = 0;
   let myObservationsCount = 0;
 
-  // Sample data
+  // Get current auth state - fixed auth store usage
+  let currentUser = null;
+  $: currentUser = $authStore?.user || null;
+  $: isAuthenticated = $authStore?.isAuthenticated || false;
+
+  // Sample data for development - you can replace with real API data
   const sampleObservations = [
     {
       id: '1',
@@ -51,314 +56,427 @@
       species_name: 'Northern Cardinal',
       scientific_name: 'Cardinalis cardinalis',
       location: {
-        latitude: 40.7505,
-        longitude: -73.9934,
-        region: 'Washington Square Park, New York'
+        latitude: 39.9042,
+        longitude: -75.1642,
+        region: 'Philadelphia, PA'
       },
       timestamp: new Date().toISOString(),
-      audio_url: 'https://example.com/cardinal.mp3',
-      notes: 'Beautiful morning song from male cardinal',
+      audio_url: 'https://example.com/cardinal-call.mp3',
+      notes: 'Clear territorial call heard from oak tree',
       count: 1,
       confidence: 5,
       weather_conditions: 'Clear, 22°C',
+      habitat_description: 'Suburban backyard',
       created_at: new Date(Date.now() - 172800000).toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      is_verified: false
     }
   ];
 
   onMount(async () => {
+    await loadObservations();
+    calculateStats();
+  });
+
+  async function loadObservations() {
+    isLoading = true;
     try {
-      await loadObservations();
-      calculateStats();
+      // TODO: Replace with actual API call
+      // For now, use sample data
+      observations = sampleObservations;
+      
+      // Update the store - fixed to work with corrected store implementation
+      observationsStore.set(observations);
     } catch (error) {
       console.error('Error loading observations:', error);
       uiStore.showNotification('error', 'Failed to load observations');
     } finally {
       isLoading = false;
     }
-  });
-
-  async function loadObservations() {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    observations = sampleObservations;
-    observationsStore.set(observations);
   }
 
   function calculateStats() {
     totalObservations = observations.length;
-    const speciesSet = new Set(observations.map(obs => obs.species_name));
-    uniqueSpecies = speciesSet.size;
+    uniqueSpecies = new Set(observations.map(obs => obs.species_name)).size;
     
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     thisWeekCount = observations.filter(obs => 
-      new Date(obs.created_at) > weekAgo
+      new Date(obs.created_at) > oneWeekAgo
     ).length;
     
-    myObservationsCount = observations.filter(obs => obs.user_id === 'user1').length;
+    myObservationsCount = currentUser ? 
+      observations.filter(obs => obs.user_id === currentUser.id).length : 0;
+  }
+
+  function handleViewModeChange(newMode) {
+    viewMode = newMode;
+  }
+
+  function toggleFilters() {
+    showFilters = !showFilters;
   }
 
   function handleNewObservation() {
-    goto('/observations/new');
-  }
-
-  function handleViewModeChange(mode) {
-    viewMode = mode;
-  }
-
-  function handleSearch() {
-    if (searchQuery.trim()) {
-      const filtered = sampleObservations.filter(obs => 
-        obs.species_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        obs.scientific_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        obs.location.region?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        obs.notes?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      observations = filtered;
+    if (isAuthenticated) {
+      goto('/observations/new');
     } else {
-      observations = sampleObservations;
+      goto('/auth/signin?redirect=/observations/new');
     }
   }
 
-  function formatDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString();
-  }
-
-  function getObservationTypeIcon(type) {
-    switch (type) {
-      case 'visual': return Camera;
-      case 'audio': return Mic;
-      case 'multi-modal': return Camera;
-      default: return Camera;
+  // Filter observations based on search and filters
+  $: filteredObservations = observations.filter(observation => {
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        observation.species_name?.toLowerCase().includes(query) ||
+        observation.scientific_name?.toLowerCase().includes(query) ||
+        observation.notes?.toLowerCase().includes(query) ||
+        observation.location?.region?.toLowerCase().includes(query)
+      );
     }
-  }
+    return true;
+  });
 
-  function getObservationTypeColor(type) {
-    switch (type) {
-      case 'visual': return 'text-blue-600';
-      case 'audio': return 'text-green-600';
-      case 'multi-modal': return 'text-purple-600';
-      default: return 'text-gray-600';
-    }
-  }
-
-  // Reactive search
-  $: if (searchQuery !== undefined) {
-    handleSearch();
+  // Reactive stats updates
+  $: {
+    calculateStats();
   }
 </script>
 
 <svelte:head>
-  <title>Leopold Nature Observer - Wildlife Observation Platform</title>
-  <meta name="description" content="Discover and document wildlife through visual and audio observations." />
+  <title>Leopold - Nature Observer</title>
+  <meta name="description" content="Document and share wildlife observations with the Leopold community" />
 </svelte:head>
 
-<div class="home-page">
-  <!-- Hero Section -->
-  <section class="hero bg-gradient-to-br from-primary-forest to-primary-forest/80 text-white py-16">
-    <div class="container mx-auto px-4">
-      <div class="max-w-4xl mx-auto text-center">
-        <h1 class="text-4xl md:text-6xl font-bold mb-6">
-          Discover Wildlife
-          <span class="block text-green-300">Around You</span>
-        </h1>
-        <p class="text-xl md:text-2xl mb-8 text-green-100">
-          Document, identify, and share your wildlife observations using advanced AI-powered tools
-        </p>
-        
-        <!-- CTA Buttons -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            on:click={handleNewObservation}
-            class="flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary-forest font-semibold rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <Plus class="w-5 h-5" />
-            New Observation
-          </button>
-          <button
-            on:click={() => viewMode = 'map'}
-            class="flex items-center justify-center gap-2 px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-primary-forest transition-colors"
-          >
-            <Map class="w-5 h-5" />
-            Explore Map
-          </button>
+<!-- Hero Section -->
+<section class="hero bg-gradient-to-br from-green-600 to-green-800 text-white py-16 md:py-24">
+  <div class="container mx-auto px-4 text-center">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-4xl md:text-6xl font-bold mb-6">
+        Discover Nature.<br />
+        <span class="text-green-200">Document Wildlife.</span>
+      </h1>
+      <p class="text-lg md:text-xl text-green-100 mb-8 max-w-2xl mx-auto">
+        Join thousands of nature enthusiasts documenting wildlife observations 
+        with photos, audio recordings, and detailed field notes.
+      </p>
+      
+      <div class="flex flex-col md:flex-row gap-4 justify-center">
+        <button 
+          on:click={handleNewObservation}
+          class="bg-white text-green-700 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-green-50 transition-colors flex items-center justify-center gap-2"
+        >
+          <Plus class="w-5 h-5" />
+          New Observation
+        </button>
+        <button 
+          on:click={() => handleViewModeChange('map')}
+          class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-green-700 transition-colors flex items-center justify-center gap-2"
+        >
+          <Map class="w-5 h-5" />
+          Explore Map
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats py-12 bg-gray-50">
+  <div class="container mx-auto px-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+      <div class="stat-card text-center p-6 bg-white rounded-lg shadow-sm">
+        <div class="text-3xl font-bold text-green-600 mb-2">{totalObservations}</div>
+        <div class="text-sm text-gray-600 flex items-center justify-center gap-1">
+          <TrendingUp class="w-4 h-4" />
+          Total Observations
+        </div>
+      </div>
+      
+      <div class="stat-card text-center p-6 bg-white rounded-lg shadow-sm">
+        <div class="text-3xl font-bold text-blue-600 mb-2">{uniqueSpecies}</div>
+        <div class="text-sm text-gray-600 flex items-center justify-center gap-1">
+          <Search class="w-4 h-4" />
+          Species Documented
+        </div>
+      </div>
+      
+      <div class="stat-card text-center p-6 bg-white rounded-lg shadow-sm">
+        <div class="text-3xl font-bold text-green-600 mb-2">{thisWeekCount}</div>
+        <div class="text-sm text-gray-600 flex items-center justify-center gap-1">
+          <Calendar class="w-4 h-4" />
+          This Week
+        </div>
+      </div>
+      
+      <div class="stat-card text-center p-6 bg-white rounded-lg shadow-sm">
+        <div class="text-3xl font-bold text-purple-600 mb-2">{myObservationsCount}</div>
+        <div class="text-sm text-gray-600 flex items-center justify-center gap-1">
+          <Users class="w-4 h-4" />
+          My Contributions
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- Stats Section -->
-  <section class="stats py-12 bg-gray-50">
-    <div class="container mx-auto px-4">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-        <div class="stat-card text-center p-6 bg-white rounded-lg shadow-sm">
-          <div class="text-3xl font-bold text-primary-forest mb-2">{totalObservations}</div>
-          <div class="text-sm text-gray-600 flex items-center justify-center gap-1">
-            <TrendingUp class="w-4 h-4" />
-            Total Observations
-          </div>
-        </div>
-        
-        <div class="stat-card text-center p-6 bg-white rounded-lg shadow-sm">
-          <div class="text-3xl font-bold text-blue-600 mb-2">{uniqueSpecies}</div>
-          <div class="text-sm text-gray-600 flex items-center justify-center gap-1">
-            <Search class="w-4 h-4" />
-            Species Documented
-          </div>
-        </div>
-        
-        <div class="stat-card text-center p-6 bg-white rounded-lg shadow-sm">
-          <div class="text-3xl font-bold text-green-600 mb-2">{thisWeekCount}</div>
-          <div class="text-sm text-gray-600 flex items-center justify-center gap-1">
-            <Calendar class="w-4 h-4" />
-            This Week
-          </div>
-        </div>
-        
-        <div class="stat-card text-center p-6 bg-white rounded-lg shadow-sm">
-          <div class="text-3xl font-bold text-purple-600 mb-2">{myObservationsCount}</div>
-          <div class="text-sm text-gray-600 flex items-center justify-center gap-1">
-            <Users class="w-4 h-4" />
-            My Contributions
-          </div>
+<!-- Main Content -->
+<main class="main-content py-8">
+  <div class="container mx-auto px-4">
+    <!-- Controls Bar -->
+    <div class="controls-bar flex flex-col md:flex-row gap-4 mb-8">
+      <!-- Search -->
+      <div class="search-section flex-1">
+        <div class="relative">
+          <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            bind:value={searchQuery}
+            placeholder="Search species, locations, or notes..."
+            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- Main Content -->
-  <main class="main-content py-8">
-    <div class="container mx-auto px-4">
-      <!-- Controls Bar -->
-      <div class="controls-bar flex flex-col md:flex-row gap-4 mb-8">
-        <!-- Search -->
-        <div class="search-section flex-1">
-          <div class="relative">
-            <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <!-- View Mode Toggles -->
+      <div class="view-modes flex bg-gray-100 rounded-lg p-1">
+        <button
+          on:click={() => handleViewModeChange('map')}
+          class="flex items-center gap-2 px-4 py-2 rounded-md transition-colors {viewMode === 'map' 
+            ? 'bg-white text-green-600 shadow-sm' 
+            : 'text-gray-600 hover:text-green-600'}"
+        >
+          <Map class="w-4 h-4" />
+          Map
+        </button>
+        <button
+          on:click={() => handleViewModeChange('list')}
+          class="flex items-center gap-2 px-4 py-2 rounded-md transition-colors {viewMode === 'list' 
+            ? 'bg-white text-green-600 shadow-sm' 
+            : 'text-gray-600 hover:text-green-600'}"
+        >
+          <List class="w-4 h-4" />
+          List
+        </button>
+      </div>
+
+      <!-- Filters Toggle -->
+      <button
+        on:click={toggleFilters}
+        class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+      >
+        <Filter class="w-4 h-4" />
+        Filters
+      </button>
+    </div>
+
+    <!-- Filters Panel -->
+    {#if showFilters}
+      <div class="filters-panel mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Observation Type</label>
+            <select class="w-full border border-gray-300 rounded-lg px-3 py-2">
+              <option value="">All Types</option>
+              <option value="visual">Visual</option>
+              <option value="audio">Audio</option>
+              <option value="multi-modal">Multi-modal</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Species</label>
             <input
               type="text"
-              bind:value={searchQuery}
-              placeholder="Search species, locations, or notes..."
-              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-transparent"
+              placeholder="Filter by species..."
+              class="w-full border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+            <input
+              type="date"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2"
             />
           </div>
         </div>
+      </div>
+    {/if}
 
-        <!-- View Mode Toggle -->
-        <div class="view-controls flex gap-2">
-          <button
-            on:click={() => handleViewModeChange('map')}
-            class={`p-2 rounded-lg transition-colors ${
-              viewMode === 'map' 
-                ? 'bg-primary-forest text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            <Map class="w-5 h-5" />
-          </button>
-          <button
-            on:click={() => handleViewModeChange('list')}
-            class={`p-2 rounded-lg transition-colors ${
-              viewMode === 'list' 
-                ? 'bg-primary-forest text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            <List class="w-5 h-5" />
-          </button>
-          <button
-            on:click={() => handleViewModeChange('grid')}
-            class={`p-2 rounded-lg transition-colors ${
-              viewMode === 'grid' 
-                ? 'bg-primary-forest text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            <Filter class="w-5 h-5" />
-          </button>
+    <!-- Loading State -->
+    {#if isLoading}
+      <div class="loading-state text-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading observations...</p>
+      </div>
+    
+    <!-- Empty State -->
+    {:else if filteredObservations.length === 0}
+      <div class="empty-state text-center py-12">
+        <Search class="w-16 h-16 text-gray-300 mx-auto mb-4" />
+        <h3 class="text-lg font-semibold text-gray-600 mb-2">No observations found</h3>
+        <p class="text-gray-500 mb-6">
+          {searchQuery ? 'Try adjusting your search terms' : 'Be the first to add an observation!'}
+        </p>
+        <button 
+          on:click={handleNewObservation}
+          class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+        >
+          Add First Observation
+        </button>
+      </div>
+
+    <!-- Map View -->
+    {:else if viewMode === 'map'}
+      <div class="map-view">
+        <!-- Placeholder for map component -->
+        <div class="map-container h-96 bg-gray-200 rounded-lg flex items-center justify-center mb-6">
+          <div class="text-center">
+            <MapPin class="w-16 h-16 text-gray-400 mx-auto mb-2" />
+            <p class="text-gray-600">Interactive map will load here</p>
+            <p class="text-sm text-gray-500">Showing {filteredObservations.length} observations</p>
+          </div>
+        </div>
+        
+        <!-- Map overlay with recent observations -->
+        <div class="recent-observations">
+          <h3 class="text-lg font-semibold mb-4">Recent Observations</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {#each filteredObservations.slice(0, 6) as observation}
+              <div class="observation-card p-4 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between mb-2">
+                  <h4 class="font-semibold text-gray-800">{observation.species_name}</h4>
+                  <span class="text-xs text-gray-500">
+                    {new Date(observation.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <p class="text-sm text-gray-600 mb-3">{observation.scientific_name}</p>
+                
+                <div class="flex items-center gap-4 text-xs text-gray-500">
+                  <div class="flex items-center gap-1">
+                    <MapPin class="w-3 h-3" />
+                    {observation.location.region}
+                  </div>
+                  {#if observation.image_urls && observation.image_urls.length > 0}
+                    <div class="flex items-center gap-1 text-blue-600">
+                      <Camera class="w-3 h-3" />
+                      {observation.image_urls.length} photo{observation.image_urls.length !== 1 ? 's' : ''}
+                    </div>
+                  {/if}
+                  {#if observation.audio_url}
+                    <div class="flex items-center gap-1 text-green-600">
+                      <Mic class="w-3 h-3" />
+                      Audio
+                    </div>
+                  {/if}
+                </div>
+              </div>
+            {/each}
+          </div>
         </div>
       </div>
 
-      <!-- Loading State -->
-      {#if isLoading}
-        <div class="text-center py-12">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-forest mx-auto"></div>
-          <p class="mt-4 text-gray-600">Loading observations...</p>
-        </div>
-      {:else}
-        <!-- Observations Content -->
-        <div class="observations-content">
-          {#if observations.length === 0}
-            <div class="text-center py-12">
-              <Camera class="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 class="text-xl font-semibold text-gray-900 mb-2">No observations found</h3>
-              <p class="text-gray-600 mb-4">Start documenting wildlife in your area!</p>
-              <button
-                on:click={handleNewObservation}
-                class="bg-primary-forest text-white px-6 py-2 rounded-lg hover:bg-primary-forest/90 transition-colors"
-              >
-                Create First Observation
-              </button>
-            </div>
-          {:else}
-            <!-- Observation Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {#each observations as observation}
-                <div class="observation-card bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
-                  <div class="flex items-start justify-between mb-4">
+    <!-- List View -->
+    {:else if viewMode === 'list'}
+      <div class="list-view">
+        <div class="observations-list space-y-4">
+          {#each filteredObservations as observation}
+            <div class="observation-card p-6 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex flex-col lg:flex-row lg:items-start gap-4">
+                <!-- Main Content -->
+                <div class="flex-1">
+                  <div class="flex items-start justify-between mb-2">
                     <div>
-                      <h3 class="font-semibold text-lg text-gray-900">{observation.species_name}</h3>
-                      {#if observation.scientific_name}
-                        <p class="text-sm text-gray-600 italic">{observation.scientific_name}</p>
-                      {/if}
+                      <h3 class="text-lg font-semibold text-gray-800">{observation.species_name}</h3>
+                      <p class="text-sm text-gray-600 italic">{observation.scientific_name}</p>
                     </div>
-                    <div class="flex items-center gap-2">
-                      <div class={`p-1 rounded ${getObservationTypeColor(observation.observation_type)}`}>
-                        <svelte:component this={getObservationTypeIcon(observation.observation_type)} class="w-4 h-4" />
-                      </div>
-                      {#if observation.is_verified}
-                        <div class="text-green-600">
-                          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                          </svg>
-                        </div>
-                      {/if}
-                    </div>
+                    <span class="text-sm text-gray-500">
+                      {new Date(observation.created_at).toLocaleDateString()}
+                    </span>
                   </div>
-                  
-                  <div class="space-y-2 text-sm text-gray-600">
-                    {#if observation.location.region}
+
+                  {#if observation.notes}
+                    <p class="text-gray-700 mb-3">{observation.notes}</p>
+                  {/if}
+
+                  <!-- Metadata -->
+                  <div class="flex flex-wrap gap-4 text-sm text-gray-500">
+                    <div class="flex items-center gap-1">
+                      <MapPin class="w-4 h-4" />
+                      {observation.location.region}
+                    </div>
+                    {#if observation.count > 1}
                       <div class="flex items-center gap-1">
-                        <MapPin class="w-4 h-4" />
-                        {observation.location.region}
+                        <Users class="w-4 h-4" />
+                        {observation.count} individual{observation.count !== 1 ? 's' : ''}
                       </div>
                     {/if}
-                    
-                    {#if observation.notes}
-                      <p class="text-gray-700 line-clamp-2">{observation.notes}</p>
+                    {#if observation.image_urls && observation.image_urls.length > 0}
+                      <div class="flex items-center gap-1 text-blue-600">
+                        <Camera class="w-4 h-4" />
+                        {observation.image_urls.length} photo{observation.image_urls.length !== 1 ? 's' : ''}
+                      </div>
                     {/if}
-                    
-                    <div class="flex items-center justify-between pt-2 border-t">
-                      <span>{formatDate(observation.created_at)}</span>
-                      {#if observation.count && observation.count > 1}
-                        <span class="bg-gray-100 px-2 py-1 rounded text-xs">
-                          {observation.count} observed
-                        </span>
-                      {/if}
-                    </div>
+                    {#if observation.audio_url}
+                      <div class="flex items-center gap-1 text-green-600">
+                        <Mic class="w-4 h-4" />
+                        Audio recording
+                      </div>
+                    {/if}
+                    {#if observation.weather_conditions}
+                      <div class="text-gray-500">
+                        {observation.weather_conditions}
+                      </div>
+                    {/if}
                   </div>
                 </div>
-              {/each}
+
+                <!-- Verification Badge -->
+                {#if observation.is_verified}
+                  <div class="flex-shrink-0">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      Verified
+                    </span>
+                  </div>
+                {/if}
+              </div>
             </div>
-          {/if}
+          {/each}
         </div>
-      {/if}
-    </div>
-  </main>
-</div>
+      </div>
+    {/if}
+  </div>
+</main>
+
+<style>
+  .hero {
+    background-image: 
+      linear-gradient(rgba(22, 101, 52, 0.8), rgba(21, 128, 61, 0.8)),
+      url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="forest" patternUnits="userSpaceOnUse" width="20" height="20"><circle cx="10" cy="10" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23forest)"/></svg>');
+  }
+  
+  .stat-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .observation-card:hover {
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 768px) {
+    .controls-bar {
+      gap: 1rem;
+    }
+    
+    .view-modes {
+      order: -1;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
