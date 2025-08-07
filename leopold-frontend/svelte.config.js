@@ -1,16 +1,19 @@
-// svelte.config.js - Correct TypeScript configuration
-import adapter from '@sveltejs/adapter-auto';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+// svelte.config.js
+import preprocess from 'svelte-preprocess';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	// Consult https://svelte.dev/docs/kit/integrations
-	// for more information about preprocessors
-	preprocess: vitePreprocess(),
-	
-	kit: {
-		adapter: adapter()
-	}
+  preprocess: preprocess(),
+
+  kit: {
+    alias: {
+      $lib: 'src/lib',
+      $components: 'src/lib/components',
+      $stores: 'src/lib/stores',
+      $types: 'src/lib/types',
+      $utils: 'src/lib/utils',
+    }
+  }
 };
 
 export default config;

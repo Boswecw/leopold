@@ -1,8 +1,9 @@
 // vite.config.ts
 import { sveltekit } from '@sveltejs/kit/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { defineConfig } from 'vite';
 
-export default {
+export default defineConfig({
   plugins: [
     sveltekit(),
     VitePWA({
@@ -34,8 +35,8 @@ export default {
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}']
       }
     })
   ]
-};
+});

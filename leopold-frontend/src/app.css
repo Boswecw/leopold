@@ -1,8 +1,9 @@
 /* src/app.css - CLEANED AND FIXED VERSION */
 
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 /* ==================== GLOBAL VARIABLES ==================== */
 :root {

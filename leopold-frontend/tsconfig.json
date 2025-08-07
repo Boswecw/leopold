@@ -1,40 +1,20 @@
 {
+  "extends": "./.svelte-kit/tsconfig.json",
   "compilerOptions": {
+    "verbatimModuleSyntax": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "lib": ["DOM", "ES2022"],
     "allowJs": true,
-    "checkJs": true,
+    "checkJs": false,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
     "strict": true,
-    "moduleResolution": "node",
-    "module": "esnext",
-    "target": "esnext",
-    "lib": ["DOM", "DOM.Iterable", "ES2020"],
-    "types": ["node"],
-    "paths": {
-      "$lib": ["./src/lib"],
-      "$lib/*": ["./src/lib/*"],
-      "$stores": ["./src/lib/stores"],
-      "$stores/*": ["./src/lib/stores/*"],
-      "$types": ["./src/lib/types"],
-      "$types/*": ["./src/lib/types/*"],
-      "$components": ["./src/lib/components"],
-      "$components/*": ["./src/lib/components/*"],
-      "$utils": ["./src/lib/utils"],
-      "$utils/*": ["./src/lib/utils/*"]
-    }
-  },
-  "include": [
-    "src/**/*.d.ts",
-    "src/**/*.ts",
-    "src/**/*.js",
-    "src/**/*.svelte"
-  ],
-  "exclude": [
-    "node_modules",
-    "build",
-    ".svelte-kit"
-  ]
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "types": ["vite/client"]
+  }
 }
