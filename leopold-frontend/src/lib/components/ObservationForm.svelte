@@ -1,3 +1,4 @@
+<!-- ObservationForm.svelte - IMPROVED VERSION -->
 <script lang="ts">
 	import { slide } from 'svelte/transition';
 	import { onMount, createEventDispatcher } from 'svelte';
@@ -54,7 +55,6 @@
 	onMount(() => {
 	  validateCurrentStep();
 	  if (initialData.species_name) {
-		// Create a mock selected species from initial data
 		selectedSpecies = {
 		  id: 'unknown',
 		  common_name: initialData.species_name,
@@ -286,18 +286,19 @@
 	}
   </script>
   
-  <div class="observation-form">
+  <!-- Main Container -->
+  <div class="max-w-4xl mx-auto p-6">
 	<!-- Progress Header -->
-	<div class="progress-header mb-8">
+	<div class="mb-8">
 	  <div class="flex justify-between items-center mb-4">
-		<h2 class="text-2xl font-bold text-primary-forest">New Observation</h2>
-		<div class="text-sm text-gray-500">
+		<h2 class="text-3xl font-bold text-primary-forest">New Observation</h2>
+		<div class="text-sm text-neutral-stone-gray">
 		  Step {currentStep} of {totalSteps}
 		</div>
 	  </div>
 	  
 	  <!-- Progress Bar -->
-	  <div class="progress-bar w-full bg-gray-200 rounded-full h-2">
+	  <div class="w-full bg-neutral-200 rounded-full h-2 mb-6">
 		<div 
 		  class="bg-primary-forest h-2 rounded-full transition-all duration-300"
 		  style="width: {progressPercentage}%"
@@ -305,17 +306,20 @@
 	  </div>
   
 	  <!-- Step Indicators -->
-	  <div class="step-indicators flex justify-between mt-4">
+	  <div class="flex justify-between relative">
+		<!-- Progress Line -->
+		<div class="absolute top-4 left-0 right-0 h-0.5 bg-neutral-200 -z-10"></div>
+		
 		{#each Array(totalSteps) as _, i}
 		  <button
 			type="button"
 			on:click={() => goToStep(i + 1)}
-			class="step-indicator flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors
+			class="step-indicator-btn flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-all duration-200 bg-white border-2
 			  {currentStep === i + 1 
-				? 'bg-primary-forest text-white' 
+				? 'border-primary-forest bg-primary-forest text-white shadow-nature' 
 				: currentStep > i + 1 
-				  ? 'bg-green-600 text-white' 
-				  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}"
+				  ? 'border-success bg-success text-white' 
+				  : 'border-neutral-300 text-neutral-400 hover:border-primary-forest hover:text-primary-forest'}"
 		  >
 			{#if currentStep > i + 1}
 			  <CheckCircle class="w-4 h-4" />
@@ -328,73 +332,73 @@
 	</div>
   
 	<!-- Step Content -->
-	<div class="step-content">
+	<div class="min-h-[500px]">
 	  <!-- Step 1: Observation Type -->
 	  {#if currentStep === 1}
-		<div class="step step-type" in:slide={{ duration: 300 }}>
-		  <h3 class="text-xl font-semibold text-primary-forest mb-4">What type of observation are you making?</h3>
+		<div in:slide={{ duration: 300 }}>
+		  <h3 class="text-xl font-semibold text-primary-forest mb-6">What type of observation are you making?</h3>
 		  
-		  <div class="observation-types grid grid-cols-1 md:grid-cols-3 gap-4">
-			<label class="observation-type-card">
+		  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+			<label class="block cursor-pointer">
 			  <input
 				type="radio"
 				bind:group={observationType}
 				value="visual"
 				class="sr-only"
 			  />
-			  <div class="card p-6 border-2 rounded-lg cursor-pointer transition-all
+			  <div class="card p-6 text-center border-2 transition-all duration-200 hover:-translate-y-1 hover:shadow-nature-lg
 				{observationType === 'visual' 
 				  ? 'border-primary-forest bg-primary-forest/5' 
-				  : 'border-gray-200 hover:border-primary-forest/50'}"
+				  : 'border-neutral-200 hover:border-primary-forest/50'}"
 			  >
 				<Camera class="w-12 h-12 mx-auto mb-3 text-primary-forest" />
 				<h4 class="font-semibold text-primary-forest mb-2">📷 Visual</h4>
-				<p class="text-sm text-gray-600">Photograph-based observations using images</p>
+				<p class="text-sm text-neutral-stone-gray">Photograph-based observations using images</p>
 			  </div>
 			</label>
   
-			<label class="observation-type-card">
+			<label class="block cursor-pointer">
 			  <input
 				type="radio"
 				bind:group={observationType}
 				value="audio"
 				class="sr-only"
 			  />
-			  <div class="card p-6 border-2 rounded-lg cursor-pointer transition-all
+			  <div class="card p-6 text-center border-2 transition-all duration-200 hover:-translate-y-1 hover:shadow-nature-lg
 				{observationType === 'audio' 
 				  ? 'border-primary-forest bg-primary-forest/5' 
-				  : 'border-gray-200 hover:border-primary-forest/50'}"
+				  : 'border-neutral-200 hover:border-primary-forest/50'}"
 			  >
 				<Mic class="w-12 h-12 mx-auto mb-3 text-primary-forest" />
 				<h4 class="font-semibold text-primary-forest mb-2">🎵 Audio</h4>
-				<p class="text-sm text-gray-600">Sound-based observations using audio recordings</p>
+				<p class="text-sm text-neutral-stone-gray">Sound-based observations using audio recordings</p>
 			  </div>
 			</label>
   
-			<label class="observation-type-card">
+			<label class="block cursor-pointer">
 			  <input
 				type="radio"
 				bind:group={observationType}
 				value="multi-modal"
 				class="sr-only"
 			  />
-			  <div class="card p-6 border-2 rounded-lg cursor-pointer transition-all
+			  <div class="card p-6 text-center border-2 transition-all duration-200 hover:-translate-y-1 hover:shadow-nature-lg
 				{observationType === 'multi-modal' 
 				  ? 'border-primary-forest bg-primary-forest/5' 
-				  : 'border-gray-200 hover:border-primary-forest/50'}"
+				  : 'border-neutral-200 hover:border-primary-forest/50'}"
 			  >
 				<div class="flex justify-center mb-3">
 				  <Camera class="w-8 h-8 text-primary-forest" />
 				  <Mic class="w-8 h-8 text-primary-forest ml-1" />
 				</div>
 				<h4 class="font-semibold text-primary-forest mb-2">🎬 Multi-modal</h4>
-				<p class="text-sm text-gray-600">Combine both visual and audio elements</p>
+				<p class="text-sm text-neutral-stone-gray">Combine both visual and audio elements</p>
 			  </div>
 			</label>
 		  </div>
   
 		  {#if validationErrors.observationType}
-			<p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
+			<p class="form-error mt-4 flex items-center gap-2">
 			  <AlertCircle class="w-4 h-4" />
 			  {validationErrors.observationType}
 			</p>
@@ -404,13 +408,14 @@
   
 	  <!-- Step 2: Media Capture -->
 	  {#if currentStep === 2}
-		<div class="step step-media" in:slide={{ duration: 300 }}>
-		  <h3 class="text-xl font-semibold text-primary-forest mb-4">Capture Your Observation</h3>
+		<div in:slide={{ duration: 300 }}>
+		  <h3 class="text-xl font-semibold text-primary-forest mb-6">Capture Your Observation</h3>
 		  
-		  <div class="media-capture space-y-6">
+		  <div class="space-y-8">
 			<!-- Visual Capture -->
 			{#if observationType === 'visual' || observationType === 'multi-modal'}
-			  <div class="image-section">
+			  <div class="card card-body">
+				<h4 class="font-semibold text-primary-forest mb-4">Images</h4>
 				<ImageUpload
 				  bind:files={selectedImages}
 				  maxFiles={5}
@@ -422,7 +427,7 @@
 				/>
 				
 				{#if validationErrors.images}
-				  <p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
+				  <p class="form-error mt-2 flex items-center gap-2">
 					<AlertCircle class="w-4 h-4" />
 					{validationErrors.images}
 				  </p>
@@ -432,7 +437,8 @@
   
 			<!-- Audio Capture -->
 			{#if observationType === 'audio' || observationType === 'multi-modal'}
-			  <div class="audio-section">
+			  <div class="card card-body">
+				<h4 class="font-semibold text-primary-forest mb-4">Audio Recording</h4>
 				<AudioRecorder
 				  bind:recording={audioRecording}
 				  maxDuration={300}
@@ -442,7 +448,7 @@
 				/>
 				
 				{#if validationErrors.audio}
-				  <p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
+				  <p class="form-error mt-2 flex items-center gap-2">
 					<AlertCircle class="w-4 h-4" />
 					{validationErrors.audio}
 				  </p>
@@ -451,7 +457,7 @@
 			{/if}
   
 			{#if validationErrors.media}
-			  <p class="error-message text-red-600 text-sm flex items-center gap-1">
+			  <p class="form-error flex items-center gap-2">
 				<AlertCircle class="w-4 h-4" />
 				{validationErrors.media}
 			  </p>
@@ -462,10 +468,11 @@
   
 	  <!-- Step 3: Location & Species -->
 	  {#if currentStep === 3}
-		<div class="step step-location-species" in:slide={{ duration: 300 }}>
-		  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+		<div in:slide={{ duration: 300 }}>
+		  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 			<!-- Location Picker -->
-			<div class="location-section">
+			<div class="card card-body">
+			  <h4 class="font-semibold text-primary-forest mb-4">Location</h4>
 			  <LocationPicker
 				bind:location
 				required={true}
@@ -474,7 +481,7 @@
 			  />
 			  
 			  {#if validationErrors.location}
-				<p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
+				<p class="form-error mt-2 flex items-center gap-2">
 				  <AlertCircle class="w-4 h-4" />
 				  {validationErrors.location}
 				</p>
@@ -482,7 +489,8 @@
 			</div>
   
 			<!-- Species Selector -->
-			<div class="species-section">
+			<div class="card card-body">
+			  <h4 class="font-semibold text-primary-forest mb-4">Species Identification</h4>
 			  <SpeciesSelector
 				bind:selectedSpecies
 				{location}
@@ -493,7 +501,7 @@
 			  />
 			  
 			  {#if validationErrors.species}
-				<p class="error-message text-red-600 text-sm mt-2 flex items-center gap-1">
+				<p class="form-error mt-2 flex items-center gap-2">
 				  <AlertCircle class="w-4 h-4" />
 				  {validationErrors.species}
 				</p>
@@ -505,34 +513,30 @@
   
 	  <!-- Step 4: Additional Details -->
 	  {#if currentStep === 4}
-		<div class="step step-details" in:slide={{ duration: 300 }}>
-		  <h3 class="text-xl font-semibold text-primary-forest mb-4">Additional Details</h3>
+		<div in:slide={{ duration: 300 }}>
+		  <h3 class="text-xl font-semibold text-primary-forest mb-6">Additional Details</h3>
 		  
-		  <div class="details-form space-y-6">
+		  <div class="card card-body space-y-6">
 			<!-- Basic Details -->
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 			  <div>
-				<label for="count" class="block text-sm font-medium text-gray-700 mb-2">
-				  Number of Individuals
-				</label>
+				<label for="count" class="form-label">Number of Individuals</label>
 				<input
 				  id="count"
 				  type="number"
 				  bind:value={count}
 				  min="1"
 				  max="1000"
-				  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+				  class="form-input"
 				/>
 			  </div>
   
 			  <div>
-				<label for="confidence" class="block text-sm font-medium text-gray-700 mb-2">
-				  Identification Confidence (1-5)
-				</label>
+				<label for="confidence" class="form-label">Identification Confidence</label>
 				<select
 				  id="confidence"
 				  bind:value={confidence}
-				  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+				  class="form-input"
 				>
 				  <option value={1}>1 - Very Uncertain</option>
 				  <option value={2}>2 - Somewhat Uncertain</option>
@@ -545,74 +549,65 @@
   
 			<!-- Description -->
 			<div>
-			  <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
-				Description
-			  </label>
+			  <label for="description" class="form-label">Description</label>
 			  <textarea
 				id="description"
 				bind:value={description}
 				rows="3"
 				placeholder="Describe what you observed (appearance, behavior, etc.)"
-				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+				class="form-input resize-vertical"
 			  ></textarea>
 			</div>
   
 			<!-- Environmental Conditions -->
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 			  <div>
-				<label for="weather" class="block text-sm font-medium text-gray-700 mb-2">
-				  Weather Conditions
-				</label>
+				<label for="weather" class="form-label">Weather Conditions</label>
 				<input
 				  id="weather"
 				  type="text"
 				  bind:value={weatherConditions}
 				  placeholder="e.g., sunny, cloudy, rainy"
-				  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+				  class="form-input"
 				/>
 			  </div>
   
 			  <div>
-				<label for="habitat" class="block text-sm font-medium text-gray-700 mb-2">
-				  Habitat Description
-				</label>
+				<label for="habitat" class="form-label">Habitat Description</label>
 				<input
 				  id="habitat"
 				  type="text"
 				  bind:value={habitatDescription}
 				  placeholder="e.g., oak forest, wetland, urban park"
-				  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+				  class="form-input"
 				/>
 			  </div>
 			</div>
   
 			<!-- Behavior Notes -->
 			<div>
-			  <label for="behavior" class="block text-sm font-medium text-gray-700 mb-2">
-				Behavior Notes
-			  </label>
+			  <label for="behavior" class="form-label">Behavior Notes</label>
 			  <textarea
 				id="behavior"
 				bind:value={behaviorNotes}
 				rows="2"
 				placeholder="Describe any interesting behaviors you observed"
-				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+				class="form-input resize-vertical"
 			  ></textarea>
 			</div>
   
 			<!-- Tags -->
 			<div>
-			  <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">
-				Tags
-			  </label>
-			  <div class="flex flex-wrap gap-2 mb-2">
+			  <label for="tags" class="form-label">Tags</label>
+			  <div class="flex flex-wrap gap-2 mb-3">
 				{#each tags as tag, index}
-				  <span class="inline-flex items-center gap-1 px-2 py-1 bg-primary-forest/10 text-primary-forest text-sm rounded-full">
+				  <span class="badge badge-primary">
 					{tag}
 					<button
 					  type="button"
 					  on:click={() => removeTag(index)}
-					  class="hover:text-red-600"
+					  class="ml-1 hover:text-error transition-colors"
+					  aria-label="Remove tag"
 					>
 					  ×
 					</button>
@@ -623,21 +618,19 @@
 				type="text"
 				placeholder="Add tags (press Enter to add)"
 				on:keydown={handleTagInput}
-				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+				class="form-input"
 			  />
 			</div>
   
 			<!-- Additional Notes -->
 			<div>
-			  <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
-				Additional Notes
-			  </label>
+			  <label for="notes" class="form-label">Additional Notes</label>
 			  <textarea
 				id="notes"
 				bind:value={notes}
 				rows="4"
 				placeholder="Any other observations or notes..."
-				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-forest focus:border-primary-forest"
+				class="form-input resize-vertical"
 			  ></textarea>
 			</div>
 		  </div>
@@ -646,57 +639,60 @@
   
 	  <!-- Step 5: Review -->
 	  {#if currentStep === 5}
-		<div class="step step-review" in:slide={{ duration: 300 }}>
-		  <h3 class="text-xl font-semibold text-primary-forest mb-4">Review Your Observation</h3>
+		<div in:slide={{ duration: 300 }}>
+		  <h3 class="text-xl font-semibold text-primary-forest mb-6">Review Your Observation</h3>
 		  
-		  <div class="review-content space-y-6">
+		  <div class="space-y-6">
 			<!-- Observation Summary -->
-			<div class="summary-card p-6 bg-gray-50 rounded-lg">
-			  <h4 class="font-semibold text-gray-800 mb-4">Observation Summary</h4>
-			  
-			  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-				<div>
-				  <span class="text-sm text-gray-600">Type:</span>
-				  <p class="font-medium capitalize">{observationType}</p>
-				</div>
-				
-				<div>
-				  <span class="text-sm text-gray-600">Species:</span>
-				  <p class="font-medium">{selectedSpecies?.common_name}</p>
-				  {#if selectedSpecies?.scientific_name}
-					<p class="text-sm italic text-gray-600">{selectedSpecies.scientific_name}</p>
-				  {/if}
-				</div>
+			<div class="card">
+			  <div class="card-header">
+				<h4 class="font-semibold text-primary-forest">Observation Summary</h4>
+			  </div>
+			  <div class="card-body">
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				  <div>
+					<span class="text-sm text-neutral-stone-gray">Type:</span>
+					<p class="font-medium capitalize text-primary-forest">{observationType}</p>
+				  </div>
+				  
+				  <div>
+					<span class="text-sm text-neutral-stone-gray">Species:</span>
+					<p class="font-medium text-primary-forest">{selectedSpecies?.common_name}</p>
+					{#if selectedSpecies?.scientific_name}
+					  <p class="text-sm italic text-neutral-stone-gray">{selectedSpecies.scientific_name}</p>
+					{/if}
+				  </div>
   
-				<div>
-				  <span class="text-sm text-gray-600">Location:</span>
-				  <p class="font-medium">{location?.region || 'Selected location'}</p>
-				  <p class="text-xs text-gray-500">
-					{location?.latitude.toFixed(6)}, {location?.longitude.toFixed(6)}
-				  </p>
-				</div>
+				  <div>
+					<span class="text-sm text-neutral-stone-gray">Location:</span>
+					<p class="font-medium text-primary-forest">{location?.region || 'Selected location'}</p>
+					<p class="text-xs text-neutral-stone-gray">
+					  {location?.latitude.toFixed(6)}, {location?.longitude.toFixed(6)}
+					</p>
+				  </div>
   
-				<div>
-				  <span class="text-sm text-gray-600">Count:</span>
-				  <p class="font-medium">{count} individual{count !== 1 ? 's' : ''}</p>
+				  <div>
+					<span class="text-sm text-neutral-stone-gray">Count:</span>
+					<p class="font-medium text-primary-forest">{count} individual{count !== 1 ? 's' : ''}</p>
+				  </div>
 				</div>
 			  </div>
 			</div>
   
 			<!-- Media Summary -->
-			<div class="media-summary">
-			  <h4 class="font-semibold text-gray-800 mb-3">Media</h4>
-			  <div class="flex flex-wrap gap-4">
+			<div class="card card-body">
+			  <h4 class="font-semibold text-primary-forest mb-4">Media</h4>
+			  <div class="flex flex-wrap gap-3">
 				{#if selectedImages.length > 0}
-				  <div class="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-lg">
-					<Camera class="w-4 h-4" />
+				  <div class="badge badge-success text-sm">
+					<Camera class="w-4 h-4 mr-1" />
 					{selectedImages.length} image(s)
 				  </div>
 				{/if}
 				
 				{#if audioRecording}
-				  <div class="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg">
-					<Mic class="w-4 h-4" />
+				  <div class="badge badge-secondary text-sm">
+					<Mic class="w-4 h-4 mr-1" />
 					Audio recording ({audioRecording.duration.toFixed(1)}s)
 				  </div>
 				{/if}
@@ -705,47 +701,45 @@
   
 			<!-- Details Summary -->
 			{#if description || weatherConditions || habitatDescription || behaviorNotes || tags.length > 0}
-			  <div class="details-summary">
-				<h4 class="font-semibold text-gray-800 mb-3">Additional Details</h4>
+			  <div class="card card-body">
+				<h4 class="font-semibold text-primary-forest mb-4">Additional Details</h4>
 				
 				{#if description}
-				  <div class="mb-3">
-					<span class="text-sm text-gray-600">Description:</span>
-					<p class="text-gray-800">{description}</p>
+				  <div class="mb-4">
+					<span class="text-sm text-neutral-stone-gray">Description:</span>
+					<p class="text-neutral-soft-black mt-1">{description}</p>
 				  </div>
 				{/if}
   
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				  {#if weatherConditions}
 					<div>
-					  <span class="text-sm text-gray-600">Weather:</span>
-					  <p class="text-gray-800">{weatherConditions}</p>
+					  <span class="text-sm text-neutral-stone-gray">Weather:</span>
+					  <p class="text-neutral-soft-black">{weatherConditions}</p>
 					</div>
 				  {/if}
   
 				  {#if habitatDescription}
 					<div>
-					  <span class="text-sm text-gray-600">Habitat:</span>
-					  <p class="text-gray-800">{habitatDescription}</p>
+					  <span class="text-sm text-neutral-stone-gray">Habitat:</span>
+					  <p class="text-neutral-soft-black">{habitatDescription}</p>
 					</div>
 				  {/if}
 				</div>
   
 				{#if behaviorNotes}
-				  <div class="mt-3">
-					<span class="text-sm text-gray-600">Behavior:</span>
-					<p class="text-gray-800">{behaviorNotes}</p>
+				  <div class="mt-4">
+					<span class="text-sm text-neutral-stone-gray">Behavior:</span>
+					<p class="text-neutral-soft-black mt-1">{behaviorNotes}</p>
 				  </div>
 				{/if}
   
 				{#if tags.length > 0}
-				  <div class="mt-3">
-					<span class="text-sm text-gray-600">Tags:</span>
-					<div class="flex flex-wrap gap-2 mt-1">
+				  <div class="mt-4">
+					<span class="text-sm text-neutral-stone-gray mb-2 block">Tags:</span>
+					<div class="flex flex-wrap gap-2">
 					  {#each tags as tag}
-						<span class="px-2 py-1 bg-primary-forest/10 text-primary-forest text-sm rounded-full">
-						  {tag}
-						</span>
+						<span class="badge badge-primary text-xs">{tag}</span>
 					  {/each}
 					</div>
 				  </div>
@@ -754,25 +748,27 @@
 			{/if}
   
 			{#if notes}
-			  <div class="notes-summary">
-				<h4 class="font-semibold text-gray-800 mb-3">Notes</h4>
-				<p class="text-gray-700 whitespace-pre-wrap">{notes}</p>
+			  <div class="card card-body">
+				<h4 class="font-semibold text-primary-forest mb-3">Notes</h4>
+				<p class="text-neutral-soft-black whitespace-pre-wrap">{notes}</p>
 			  </div>
 			{/if}
 		  </div>
   
 		  <!-- Validation Errors -->
 		  {#if !currentStepValid}
-			<div class="validation-summary mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-			  <h4 class="font-medium text-red-700 mb-2 flex items-center gap-2">
-				<AlertCircle class="w-4 h-4" />
-				Please fix the following issues:
-			  </h4>
-			  <ul class="text-red-600 text-sm space-y-1">
-				{#each Object.values(validationErrors) as error}
-				  <li>• {error}</li>
-				{/each}
-			  </ul>
+			<div class="card bg-error/5 border-error/20 mt-6">
+			  <div class="card-body">
+				<h4 class="font-medium text-error mb-3 flex items-center gap-2">
+				  <AlertCircle class="w-4 h-4" />
+				  Please fix the following issues:
+				</h4>
+				<ul class="text-error text-sm space-y-1">
+				  {#each Object.values(validationErrors) as error}
+					<li>• {error}</li>
+				  {/each}
+				</ul>
+			  </div>
 			</div>
 		  {/if}
 		</div>
@@ -780,24 +776,24 @@
 	</div>
   
 	<!-- Navigation Buttons -->
-	<div class="navigation-buttons flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+	<div class="flex justify-between items-center mt-8 pt-6 border-t border-neutral-200">
 	  <div>
 		{#if currentStep > 1}
 		  <button
 			type="button"
 			on:click={previousStep}
-			class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800"
+			class="btn btn-ghost"
 		  >
 			← Previous
 		  </button>
 		{/if}
 	  </div>
   
-	  <div class="flex gap-3">
+	  <div class="flex gap-4">
 		<button
 		  type="button"
 		  on:click={() => dispatch('cancel')}
-		  class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+		  class="btn btn-outline"
 		>
 		  Cancel
 		</button>
@@ -807,7 +803,7 @@
 			type="button"
 			on:click={nextStep}
 			disabled={!currentStepValid}
-			class="flex items-center gap-2 px-6 py-2 bg-primary-forest text-white rounded-lg hover:bg-primary-forest/90 disabled:opacity-50 disabled:cursor-not-allowed"
+			class="btn btn-primary"
 		  >
 			Next →
 		  </button>
@@ -816,13 +812,13 @@
 			type="button"
 			on:click={handleSubmit}
 			disabled={!currentStepValid || isSubmitting}
-			class="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+			class="btn btn-primary"
 		  >
 			{#if isSubmitting}
-			  <div class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+			  <div class="spinner w-4 h-4 mr-2"></div>
 			  Submitting...
 			{:else}
-			  <CheckCircle class="w-4 h-4" />
+			  <CheckCircle class="w-4 h-4 mr-2" />
 			  Submit Observation
 			{/if}
 		  </button>
@@ -830,107 +826,3 @@
 	  </div>
 	</div>
   </div>
-  
-  <style>
-	.observation-form {
-	  max-width: 4xl;
-	  margin: 0 auto;
-	}
-  
-	.step-indicators {
-	  position: relative;
-	}
-  
-	.step-indicators::before {
-	  content: '';
-	  position: absolute;
-	  top: 50%;
-	  left: 0;
-	  right: 0;
-	  height: 2px;
-	  background-color: #e5e7eb;
-	  z-index: -1;
-	}
-  
-	.step-indicator {
-	  background-color: white;
-	  border: 2px solid;
-	}
-  
-	.observation-type-card {
-	  display: block;
-	}
-  
-	.card {
-	  height: 100%;
-	  text-align: center;
-	}
-  
-	.card:hover {
-	  transform: translateY(-2px);
-	  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-	}
-  
-	.error-message {
-	  animation: shake 0.5s ease-in-out;
-	}
-  
-	@keyframes shake {
-	  0%, 100% { transform: translateX(0); }
-	  25% { transform: translateX(-5px); }
-	  75% { transform: translateX(5px); }
-	}
-  
-	/* Responsive adjustments */
-	@media (max-width: 768px) {
-	  .observation-types {
-		grid-template-columns: 1fr;
-	  }
-	  
-	  .step-indicators {
-		justify-content: space-around;
-	  }
-	  
-	  .navigation-buttons {
-		flex-direction: column;
-		gap: 1rem;
-	  }
-	}
-  
-	/* Focus styles */
-	button:focus,
-	input:focus,
-	textarea:focus,
-	select:focus {
-	  outline: 2px solid #065f46;
-	  outline-offset: 2px;
-	}
-  
-	/* Animation for step transitions */
-	.step {
-	  min-height: 400px;
-	}
-  
-	/* Summary card styling */
-	.summary-card {
-	  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-	}
-  
-	/* Tag styling */
-	.tags input {
-	  border: none;
-	  outline: none;
-	  background: transparent;
-	}
-  
-	/* Loading animation */
-	@keyframes spin {
-	  to {
-		transform: rotate(360deg);
-	  }
-	}
-  
-	.animate-spin {
-	  animation: spin 1s linear infinite;
-	}
-  </style>
