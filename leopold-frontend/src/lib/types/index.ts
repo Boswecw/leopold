@@ -1,144 +1,186 @@
-// src/lib/types/index.ts - Clean, complete types file
-// Replace your entire src/lib/types/index.ts with this
+// src/lib/types/index.ts - Comprehensive Leopold Types
 
-// ===== BASIC TYPES (define first) =====
+// ===== CORE ENUMS =====
 export type ObservationType = 'visual' | 'audio' | 'multi-modal' | 'plant';
-export type ViewMode = 'map' | 'list' | 'grid' | 'timeline';
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 
-// ===== CORE INTERFACES =====
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  created_at: string;
-  updated_at: string;
-  profile_image?: string;
-  bio?: string;
-  first_name?: string;
-  last_name?: string;
-  location?: string;
-  verified?: boolean;
-}
-
+// ===== LOCATION TYPES =====
 export interface Location {
   latitude: number;
   longitude: number;
+  altitude?: number;
   accuracy?: number;
   region?: string;
   country?: string;
   address?: string;
-  elevation?: number;
+}
+
+export interface MapBounds {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+  zoom: number;
+}
+
+export interface ClusterInfo {
+  count: number;
+  bounds: MapBounds;
+  observations: Observation[];
+}
+
+// ===== USER TYPES =====
+export interface User {
+  id: string;
+  email: string;
+  username: string;
+  display_name?: string;
+  avatar_url?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  joined_date: string;
+  observation_count?: number;
+  species_count?: number;
+  badges?: string[];
+  preferences?: UserPreferences;
+  is_verified?: boolean;
+  is_expert?: boolean;
+  reputation_score?: number;
+}
+
+export interface UserPreferences {
+  theme: 'light' | 'dark' | 'auto';
+  language: string;
+  timezone: string;
+  email_notifications: boolean;
+  push_notifications: boolean;
+  public_profile: boolean;
+  default_observation_privacy: 'public' | 'private' | 'friends';
+  measurement_units: 'metric' | 'imperial';
+  map_default_zoom: number;
+  audio_auto_play: boolean;
+}
+
+// ===== AUDIO TYPES =====
+export interface AudioRecording {
+  id?: string;
+  url: string;
+  blob?: Blob;
+  duration: number;
+  file_size?: number;
+  format?: string;
+  sample_rate?: number;
+  channels?: number;
+  created_at?: string;
+  waveform_data?: number[];
+  spectrogram_url?: string;
+  analysis?: AudioAnalysis;
+}
+
+export interface AudioAnalysis {
+  dominant_frequency: number;
+  frequency_range: {
+    min: number;
+    max: number;
+  };
+  amplitude_range: {
+    min: number;
+    max: number;
+  };
+  species_predictions?: SpeciesPrediction[];
+  confidence_score: number;
+  analysis_timestamp: string;
+}
+
+export interface SpeciesPrediction {
+  species_name: string;
+  scientific_name?: string;
+  confidence: number;
+  frequency_match: number;
+  temporal_match: number;
 }
 
 // ===== OBSERVATION TYPES =====
 export interface Observation {
   id: string;
   user_id: string;
-  user?: User;
-  observation_type: ObservationType;
   species_name?: string;
   scientific_name?: string;
-  common_name?: string;
-  description?: string;
-  notes?: string;
+  common_names?: string[];
+  observation_type: ObservationType;
   location: Location;
   created_at: string;
-  updated_at: string;
-  observed_at?: string;
+  updated_at?: string;
+  description?: string;
+  notes?: string;
   
   // Media
-  image_urls?: string[];
   images?: string[];
-  audio_url?: string;
-  
-  // Analysis
-  confidence?: number;
-  audio_features?: AudioFeatures;
-  ai_predictions?: AIPredictions;
+  audio_recording?: AudioRecording;
   
   // Metadata
-  weather_conditions?: string;
-  habitat_type?: string;
-  habitat_description?: string;
-  call_type?: string;
   count?: number;
-  verification_status?: 'pending' | 'verified' | 'rejected';
-  is_verified?: boolean;
+  confidence?: number;
+  weather_conditions?: string;
+  habitat_description?: string;
+  behavior_notes?: string;
   tags?: string[];
   
-  // Legacy support
-  latitude?: number;
-  longitude?: number;
+  // Verification
+  is_verified?: boolean;
+  verified_by?: string;
+  verified_at?: string;
+  verification_notes?: string;
+  
+  // Community
+  likes_count?: number;
+  comments_count?: number;
+  shares_count?: number;
+  is_liked?: boolean;
+  is_bookmarked?: boolean;
+  
+  // Privacy
+  is_private?: boolean;
+  visibility: 'public' | 'private' | 'friends' | 'experts';
+  
+  // Additional fields
+  season?: string;
+  time_of_day?: 'dawn' | 'morning' | 'noon' | 'afternoon' | 'dusk' | 'night';
+  moon_phase?: string;
+  temperature?: number;
+  humidity?: number;
+  wind_conditions?: string;
 }
 
-// ===== AUDIO TYPES =====
-export interface AudioFeatures {
-  frequency_peak: number;
-  amplitude: number;
-  duration: number;
-  noise_ratio: number;
-  pattern_type?: string;
-  dominant_frequency?: number;
-  spectral_centroid?: number;
-  zero_crossing_rate?: number;
-}
-
-export interface AudioRecording {
-  id: string;
-  blob: Blob;
-  url: string;
-  duration: number;
-  format: string;
-  size: number;
-  created_at: string;
-  file_name?: string;
-  sample_rate?: number;
-  channels?: number;
-  bit_depth?: number;
-}
-
-export interface AudioState {
-  isRecording: boolean;
-  isPlaying: boolean;
-  hasPermission: boolean;
-  currentRecording: AudioRecording | null;
-  error: string | null;
-  recordingTime?: number;
-  audioLevel?: number;
-  is_recording?: boolean;
-  recording_time?: number;
-  audio_level?: number;
-  current_recording?: AudioRecording | null;
-  supported_formats?: string[];
-  permissions_granted?: boolean;
-}
-
-// ===== AI TYPES =====
-export interface AIPredictions {
-  species: Array<{
-    name: string;
-    scientific_name: string;
-    confidence: number;
-  }>;
-  identification_method: string;
+export interface ObservationFormData {
+  observation_type: ObservationType;
+  species_name: string;
+  scientific_name?: string;
+  location: Location;
+  images?: File[] | string[];
+  audio_recording?: File | AudioRecording;
+  description?: string;
+  notes?: string;
+  count?: number;
   confidence?: number;
-  processing_time?: number;
-  model_version?: string;
+  weather_conditions?: string;
+  habitat_description?: string;
+  behavior_notes?: string;
+  tags?: string[];
+  is_private?: boolean;
+  visibility?: 'public' | 'private' | 'friends' | 'experts';
 }
 
 // ===== FILTER TYPES =====
 export interface ObservationFilters {
-  observation_types?: string[];
-  species_name?: string;
-  location_radius?: {
-    center: { latitude: number; longitude: number };
-    radius_km: number;
-  };
   species?: string[];
   location?: {
-    center: { latitude: number; longitude: number };
+    center: {
+      latitude: number;
+      longitude: number;
+    };
     radius_km: number;
   };
   dateRange?: {
@@ -149,121 +191,242 @@ export interface ObservationFilters {
   user?: string;
   tags?: string[];
   verified?: boolean;
-  verified_only?: boolean;
 }
 
-// ===== FORM TYPES =====
-export interface ObservationFormData {
-  observation_type: ObservationType;
-  species_name?: string;
-  scientific_name?: string;
+// ===== SPECIES TYPES =====
+export interface Species {
+  id: string;
+  common_name: string;
+  scientific_name: string;
+  family?: string;
+  order?: string;
+  class?: string;
+  kingdom?: string;
+  conservation_status?: ConservationStatus;
   description?: string;
-  notes?: string;
-  location: Location;
-  audio_recording?: AudioRecording;
-  images?: File[];
-  weather_conditions?: string;
-  habitat_type?: string;
-  call_type?: string;
-  confidence?: number;
-  count?: number;
-  tags?: string[];
+  habitat?: string;
+  diet?: string;
+  size_range?: {
+    min_length?: number;
+    max_length?: number;
+    min_weight?: number;
+    max_weight?: number;
+  };
+  typical_sounds?: string[];
+  identification_tips?: string[];
+  similar_species?: string[];
+  seasonal_behavior?: Record<string, string>;
+  geographic_range?: string[];
+  image_urls?: string[];
+  audio_urls?: string[];
+  external_links?: ExternalLink[];
 }
 
-// ===== UTILITY TYPES =====
+export type ConservationStatus = 
+  | 'LC' // Least Concern
+  | 'NT' // Near Threatened  
+  | 'VU' // Vulnerable
+  | 'EN' // Endangered
+  | 'CR' // Critically Endangered
+  | 'EW' // Extinct in Wild
+  | 'EX' // Extinct
+  | 'DD' // Data Deficient
+  | 'NE'; // Not Evaluated
+
+export interface ExternalLink {
+  name: string;
+  url: string;
+  type: 'wikipedia' | 'ebird' | 'inaturalist' | 'allaboutbirds' | 'other';
+}
+
+// ===== API TYPES =====
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+  pagination?: PaginationInfo;
+}
+
+export interface PaginationInfo {
+  page: number;
+  per_page: number;
+  total_items: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
+}
+
+export interface ApiError {
+  code: string;
+  message: string;
+  details?: Record<string, any>;
+  timestamp: string;
+}
+
+// ===== VALIDATION TYPES =====
 export interface ValidationResult {
   isValid: boolean;
   errors: string[];
   warnings?: string[];
 }
 
-export interface SpeciesSearchResult {
+export interface FieldValidation {
+  field: string;
+  value: any;
+  rules: ValidationRule[];
+}
+
+export interface ValidationRule {
+  type: 'required' | 'minLength' | 'maxLength' | 'pattern' | 'email' | 'url' | 'custom';
+  value?: any;
+  message: string;
+  validator?: (value: any) => boolean;
+}
+
+// ===== GAMIFICATION TYPES =====
+export interface Badge {
   id: string;
-  common_name: string;
-  scientific_name: string;
-  habitat_types: string[];
+  name: string;
+  description: string;
+  icon_url: string;
+  category: BadgeCategory;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  requirements: BadgeRequirement[];
+  earned_at?: string;
+  progress?: number;
+  max_progress?: number;
+}
+
+export type BadgeCategory = 
+  | 'observer' 
+  | 'explorer' 
+  | 'contributor' 
+  | 'community' 
+  | 'expert' 
+  | 'conservation'
+  | 'seasonal'
+  | 'species_specialist';
+
+export interface BadgeRequirement {
+  type: 'observation_count' | 'species_count' | 'location_count' | 'verification_count' | 'community_engagement';
+  value: number;
+  timeframe?: 'all_time' | 'yearly' | 'monthly' | 'weekly';
+  filters?: Record<string, any>;
+}
+
+export interface UserStats {
+  total_observations: number;
+  unique_species: number;
+  locations_visited: number;
+  verifications_made: number;
+  likes_received: number;
+  comments_made: number;
+  streak_days: number;
+  rank: number;
+  points: number;
+  badges_earned: Badge[];
+  recent_achievements: Achievement[];
+}
+
+export interface Achievement {
+  id: string;
+  type: 'badge_earned' | 'milestone_reached' | 'streak_achieved' | 'rank_up';
+  title: string;
+  description: string;
+  earned_at: string;
+  points_awarded: number;
+  badge?: Badge;
+}
+
+// ===== COMMENT TYPES =====
+export interface Comment {
+  id: string;
+  observation_id: string;
+  user_id: string;
+  user: Pick<User, 'id' | 'username' | 'avatar_url' | 'is_verified'>;
+  content: string;
+  created_at: string;
+  updated_at?: string;
+  likes_count: number;
+  replies_count: number;
+  is_liked?: boolean;
+  is_flagged?: boolean;
+  parent_comment_id?: string;
+  replies?: Comment[];
+}
+
+// ===== SEARCH TYPES =====
+export interface SearchFilters extends ObservationFilters {
+  query?: string;
+  sort_by?: 'relevance' | 'date' | 'popularity' | 'distance';
+  sort_order?: 'asc' | 'desc';
+  include_private?: boolean;
+  verified_only?: boolean;
+  with_media?: boolean;
+  with_audio?: boolean;
+  with_images?: boolean;
+}
+
+export interface SearchResult {
+  type: 'observation' | 'species' | 'user' | 'location';
+  id: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
   image_url?: string;
-  conservation_status?: string;
+  relevance_score: number;
+  url: string;
+  metadata?: Record<string, any>;
 }
 
-export interface MapBounds {
-  north: number;
-  south: number;
-  east: number;
-  west: number;
-  zoom?: number;
+// ===== EVENT TYPES =====
+export interface AppEvent {
+  type: string;
+  payload: Record<string, any>;
+  timestamp: number;
+  source: 'user' | 'system' | 'api';
 }
 
-export interface ClusterInfo {
-  count: number;
-  audio_count: number;
-  visual_count: number;
-  multi_modal_count: number;
-  average_confidence: number;
+export interface UserEvent extends AppEvent {
+  user_id: string;
+  session_id: string;
 }
 
-// ===== HELPER FUNCTIONS =====
-export function isValidLocation(loc: any): loc is Location {
-  return loc &&
-         typeof loc.latitude === 'number' &&
-         typeof loc.longitude === 'number' &&
-         loc.latitude >= -90 && loc.latitude <= 90 &&
-         loc.longitude >= -180 && loc.longitude <= 180;
-}
-
-export function validateSpeciesName(name: string): ValidationResult {
-  const errors: string[] = [];
-  const trimmedName = name.trim();
-  
-  if (!trimmedName) {
-    errors.push('Species name is required');
-  } else if (trimmedName.length < 2) {
-    errors.push('Species name must be at least 2 characters');
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-}
-
-export function createEmptyObservation(userId: string): Partial<Observation> {
-  return {
-    id: crypto.randomUUID(),
-    user_id: userId,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    location: {
-      latitude: 0,
-      longitude: 0
-    }
-  };
-}
-
-export function validateObservation(obs: Partial<ObservationFormData>): ValidationResult {
-  const errors: string[] = [];
-  
-  if (!obs.observation_type) {
-    errors.push('Observation type is required');
-  }
-  
-  if (!obs.location || obs.location.latitude === 0 || obs.location.longitude === 0) {
-    errors.push('Valid location is required');
-  }
-  
-  if (!obs.species_name && !obs.description) {
-    errors.push('Either species name or description is required');
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-}
-
-export function sanitizeHtml(html: string): string {
-  if (typeof document === 'undefined') return html;
-  const div = document.createElement('div');
-  div.textContent = html;
-  return div.innerHTML;
-}
+// ===== EXPORT ALL =====
+export type {
+  // Re-export everything for convenience
+  ObservationType,
+  LoadingState, 
+  NotificationType,
+  Location,
+  MapBounds,
+  ClusterInfo,
+  User,
+  UserPreferences,
+  AudioRecording,
+  AudioAnalysis,
+  SpeciesPrediction,
+  Observation,
+  ObservationFormData,
+  ObservationFilters,
+  Species,
+  ConservationStatus,
+  ExternalLink,
+  ApiResponse,
+  PaginationInfo,
+  ApiError,
+  ValidationResult,
+  FieldValidation,
+  ValidationRule,
+  Badge,
+  BadgeCategory,
+  BadgeRequirement,
+  UserStats,
+  Achievement,
+  Comment,
+  SearchFilters,
+  SearchResult,
+  AppEvent,
+  UserEvent
+};

@@ -1,155 +1,82 @@
-// place files you want to import through the `$lib` alias in this folder.
-// src/lib/stores/index.ts - Fixed stores with missing methods
-import { writable, derived, type Writable } from 'svelte/store';
+// src/lib/index.ts - Fixed store implementations
+import { writable, type Writable } from 'svelte/store';
 import type { 
   Observation, 
-  ObservationFilters, 
-  User, 
   AudioState, 
-  NotificationType,
-  LoadingState 
-} from '$lib/types';
+  FiltersState,
+  ObservationType
+} from './types';
 
-/**
- * Observations Store with missing methods
- */
-interface ObservationStore extends Writable<Observation[]> {
+// FIXED: Don't extend Writable directly - compose it instead
+interface ObservationStore {
+  subscribe: Writable<Observation[]>['subscribe'];
+  set: Writable<Observation[]>['set'];
+  update: Writable<Observation[]>['update'];
+  // Custom methods with different names to avoid conflicts
   add: (observation: Observation) => void;
   remove: (id: string) => void;
-  update: (id: string, updates: Partial<Observation>) => void;
+  updateObservation: (id: string, updates: Partial<Observation>) => void;
+  getById: (id: string) => Observation | undefined;
+  getBySpecies: (species: string) => Observation[];
+  getRecent: (limit?: number) => Observation[];
+  clear: () => void;
 }
 
+// Create the observations store
 function createObservationsStore(): ObservationStore {
   const { subscribe, set, update } = writable<Observation[]>([]);
+  
+  let currentObservations: Observation[] = [];
+  
+  // Keep track of current state
+  subscribe(obs => currentObservations = obs);
 
   return {
     subscribe,
     set,
     update,
-    add: (observation: Observation) => 
+    
+    add: (observation: Observation) =>
       update(observations => [...observations, observation]),
-    remove: (id: string) => 
+    
+    remove: (id: string) =>
       update(observations => observations.filter(obs => obs.id !== id)),
-    update: (id: string, updates: Partial<Observation>) => 
-      update(observations => 
-        observations.map(obs => obs.id === id ? { ...obs, ...updates } : obs)
-      )
+    
+    updateObservation: (id: string, updates: Partial<Observation>) =>
+      update(observations =>
+        observations.map(obs =>
+          obs.id === id ? { ...obs, ...updates } : obs
+        )
+      ),
+    
+    getById: (id: string) => 
+      currentObservations.find(obs => obs.id === id),
+    
+    getBySpecies: (species: string) =>
+      currentObservations.filter(obs => 
+        obs.species_name?.toLowerCase().includes(species.toLowerCase())
+      ),
+    
+    getRecent: (limit = 10) =>
+      [...currentObservations]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, limit),
+    
+    clear: () => set([])
   };
 }
 
-export const observationsStore = createObservationsStore();
-
-/**
- * UI Store
- */
-interface UIState {
-  loading: LoadingState;
-  notification: {
-    type: NotificationType;
-    message: string;
-  } | null;
-  modal: {
-    isOpen: boolean;
-    component: string | null;
-    props: Record<string, any>;
-  };
-}
-
-interface UIStore extends Writable<UIState> {
-  setLoading: (state: LoadingState) => void;
-  showNotification: (type: NotificationType, message: string) => void;
-  clearNotification: () => void;
-  openModal: (component: string, props?: Record<string, any>) => void;
-  closeModal: () => void;
-}
-
-function createUIStore(): UIStore {
-  const initialState: UIState = {
-    loading: 'idle',
-    notification: null,
-    modal: {
-      isOpen: false,
-      component: null,
-      props: {}
-    }
-  };
-
-  const { subscribe, set, update } = writable(initialState);
-
-  return {
-    subscribe,
-    set,
-    update,
-    setLoading: (state: LoadingState) => 
-      update(ui => ({ ...ui, loading: state })),
-    showNotification: (type: NotificationType, message: string) => 
-      update(ui => ({ 
-        ...ui, 
-        notification: { type, message } 
-      })),
-    clearNotification: () => 
-      update(ui => ({ ...ui, notification: null })),
-    openModal: (component: string, props = {}) => 
-      update(ui => ({
-        ...ui,
-        modal: { isOpen: true, component, props }
-      })),
-    closeModal: () => 
-      update(ui => ({
-        ...ui,
-        modal: { isOpen: false, component: null, props: {} }
-      }))
-  };
-}
-
-export const uiStore = createUIStore();
-
-/**
- * Auth Store
- */
-interface AuthStore extends Writable<User | null> {
-  login: (user: User) => void;
-  logout: () => void;
-  initialize: () => void;
-}
-
-function createAuthStore(): AuthStore {
-  const { subscribe, set, update } = writable<User | null>(null);
-
-  return {
-    subscribe,
-    set,
-    update,
-    login: (user: User) => set(user),
-    logout: () => set(null),
-    initialize: () => {
-      // Initialize auth state from localStorage or API
-      // For now, just a placeholder
-      console.log('Initializing auth store...');
-    }
-  };
-}
-
-export const authStore = createAuthStore();
-
-/**
- * Audio Store
- */
-interface AudioStore extends Writable<AudioState> {
-  initialize: () => void;
-  startRecording: () => void;
-  stopRecording: () => void;
-  setLevel: (level: number) => void;
-}
-
-function createAudioStore(): AudioStore {
+// FIXED: Audio store with corrected initial state
+function createAudioStore() {
   const initialState: AudioState = {
-    is_recording: false,
-    recording_time: 0,
-    audio_level: 0,
-    current_recording: null,
-    supported_formats: [],
-    permissions_granted: false
+    isRecording: false,
+    isPlaying: false,
+    hasPermission: false,
+    currentRecording: null,
+    recordingTime: 0,
+    audioLevel: 0,
+    supportedFormats: [],
+    error: null
   };
 
   const { subscribe, set, update } = writable(initialState);
@@ -158,51 +85,166 @@ function createAudioStore(): AudioStore {
     subscribe,
     set,
     update,
-    initialize: () => {
-      // Initialize audio capabilities
-      console.log('Initializing audio store...');
+    
+    startRecording: async () => {
+      update(state => ({ ...state, isRecording: true, error: null }));
     },
-    startRecording: () => 
-      update(state => ({ ...state, is_recording: true })),
-    stopRecording: () => 
-      update(state => ({ ...state, is_recording: false })),
-    setLevel: (level: number) => 
-      update(state => ({ ...state, audio_level: level }))
+    
+    stopRecording: async () => {
+      update(state => ({ ...state, isRecording: false }));
+      return null;
+    },
+    
+    playRecording: async (recording: any) => {
+      update(state => ({ ...state, isPlaying: true, currentRecording: recording }));
+    },
+    
+    stopPlayback: () => {
+      update(state => ({ ...state, isPlaying: false }));
+    },
+    
+    requestPermissions: async () => {
+      update(state => ({ ...state, hasPermission: true }));
+      return true;
+    },
+    
+    setAudioLevel: (level: number) => {
+      update(state => ({ ...state, audioLevel: level }));
+    },
+    
+    clearError: () => {
+      update(state => ({ ...state, error: null }));
+    }
   };
 }
 
+// COMPLETELY FIXED: Filters store that handles exactOptionalPropertyTypes properly
+function createFiltersStore() {
+  const initialState: FiltersState = {
+    species: [],
+    // Don't set undefined - just omit the properties entirely
+    tags: [],
+    sortBy: 'created_at',
+    sortOrder: 'desc'
+  };
+
+  const { subscribe, set, update } = writable(initialState);
+
+  return {
+    subscribe,
+    set,
+    update,
+    
+    setLocation: (location: { center: { latitude: number; longitude: number }; radius_km: number } | undefined) =>
+      update(filters => {
+        if (location === undefined) {
+          const { location: _, ...rest } = filters;
+          return rest;
+        }
+        return { ...filters, location };
+      }),
+    
+    setLocationFromPoint: (center: { latitude: number; longitude: number }, radius_km: number) =>
+      update(filters => ({ ...filters, location: { center, radius_km } })),
+    
+    setDateRange: (dateRange: { start: Date; end: Date } | undefined) =>
+      update(filters => {
+        if (dateRange === undefined) {
+          const { dateRange: _, ...rest } = filters;
+          return rest;
+        }
+        return { ...filters, dateRange };
+      }),
+    
+    setObservationType: (observationType: ObservationType | 'all' | undefined) =>
+      update(filters => {
+        if (observationType === undefined) {
+          const { observationType: _, ...rest } = filters;
+          return rest;
+        }
+        return { ...filters, observationType };
+      }),
+    
+    setUser: (user: string | undefined) =>
+      update(filters => {
+        if (user === undefined) {
+          const { user: _, ...rest } = filters;
+          return rest;
+        }
+        return { ...filters, user };
+      }),
+    
+    setTags: (tags: string[]) =>
+      update(filters => ({ ...filters, tags })),
+    
+    addTag: (tag: string) =>
+      update(filters => ({ ...filters, tags: [...filters.tags, tag] })),
+    
+    removeTag: (tag: string) =>
+      update(filters => ({ ...filters, tags: filters.tags.filter(t => t !== tag) })),
+    
+    setSpecies: (species: string[]) =>
+      update(filters => ({ ...filters, species })),
+    
+    addSpecies: (species: string) =>
+      update(filters => ({ ...filters, species: [...filters.species, species] })),
+    
+    removeSpecies: (species: string) =>
+      update(filters => ({ ...filters, species: filters.species.filter(s => s !== species) })),
+    
+    setVerified: (verified: boolean | undefined) =>
+      update(filters => {
+        if (verified === undefined) {
+          const { verified: _, ...rest } = filters;
+          return rest;
+        }
+        return { ...filters, verified };
+      }),
+    
+    setSorting: (sortBy: string, sortOrder: 'asc' | 'desc' = 'desc') =>
+      update(filters => ({ ...filters, sortBy, sortOrder })),
+    
+    clearLocation: () =>
+      update(filters => {
+        const { location: _, ...rest } = filters;
+        return rest;
+      }),
+    
+    clearDateRange: () =>
+      update(filters => {
+        const { dateRange: _, ...rest } = filters;
+        return rest;
+      }),
+    
+    clearObservationType: () =>
+      update(filters => {
+        const { observationType: _, ...rest } = filters;
+        return rest;
+      }),
+    
+    clearUser: () =>
+      update(filters => {
+        const { user: _, ...rest } = filters;
+        return rest;
+      }),
+    
+    clearTags: () =>
+      update(filters => ({ ...filters, tags: [] })),
+    
+    clearSpecies: () =>
+      update(filters => ({ ...filters, species: [] })),
+    
+    clearVerified: () =>
+      update(filters => {
+        const { verified: _, ...rest } = filters;
+        return rest;
+      }),
+    
+    clearAll: () => set(initialState)
+  };
+}
+
+// Export the stores
+export const observationsStore = createObservationsStore();
 export const audioStore = createAudioStore();
-
-/**
- * Filters Store
- */
-export const filtersStore = writable<ObservationFilters>({});
-
-/**
- * Derived stores
- */
-export const filteredObservations = derived(
-  [observationsStore, filtersStore],
-  ([observations, filters]) => {
-    // Apply filters to observations
-    let filtered = observations;
-
-    if (filters.species && filters.species.length > 0) {
-      filtered = filtered.filter(obs => 
-        filters.species!.includes(obs.species_name)
-      );
-    }
-
-    if (filters.observation_types && filters.observation_types.length > 0) {
-      filtered = filtered.filter(obs => 
-        filters.observation_types!.includes(obs.observation_type)
-      );
-    }
-
-    if (filters.verified_only) {
-      filtered = filtered.filter(obs => obs.is_verified);
-    }
-
-    return filtered;
-  }
-);
+export const filtersStore = createFiltersStore();

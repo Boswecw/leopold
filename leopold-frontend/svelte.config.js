@@ -1,50 +1,46 @@
-/// <reference types="vitest" />
-import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vitest/config';
-import { SvelteKitPWA } from '@vite-pwa/sveltekit';
+import adapter from '@sveltejs/adapter-auto';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
-export default defineConfig({
-  plugins: [
-    sveltekit(),
-    SvelteKitPWA({
-      srcDir: './src',
-      mode: 'development',
-      scope: '/',
-      base: '/',
-      manifest: {
-        short_name: 'Leopold',
-        name: 'Leopold Nature Observer',
-        start_url: '/',
-        scope: '/',
-        display: 'standalone',
-        theme_color: "#2F5D50",
-        background_color: "#FAFAF9",
-        icons: [
-          {
-            src: '/leopold-logo.svg',
-            sizes: '192x192',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
-          }
-        ]
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}']
-      },
-      devOptions: {
-        enabled: false,
-        type: 'module'
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+  // Consult https://kit.svelte.dev/docs/integrations#preprocessors
+  // for more information about preprocessors
+  preprocess: vitePreprocess(),
+
+  kit: {
+    // adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.
+    // If your environment is not supported or you settled on a specific environment, switch out the adapter.
+    // See https://kit.svelte.dev/docs/adapters for more information about adapters.
+    adapter: adapter(),
+    
+    // Configure path aliases
+    alias: {
+      $lib: 'src/lib',
+      '$lib/*': 'src/lib/*'
+    },
+
+    // Configure CSP for security
+    csp: {
+      directives: {
+        'script-src': ['self'],
+        'style-src': ['self', 'unsafe-inline'],
+        'img-src': ['self', 'data:', 'https:'],
+        'font-src': ['self'],
+        'connect-src': ['self'],
+        'media-src': ['self', 'blob:']
       }
-    })
-  ],
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.{test,spec}.{js,ts}']
-  },
-  define: {
-    __DATE__: `'${new Date().toISOString()}'`,
-    __RELOAD_SW__: false,
+    },
+
+    // Enable service worker for PWA
+    serviceWorker: {
+      register: true
+    }
   }
-});
+
+  // NOTE: Removed runes: true - this was causing Svelte 5 mode
+  // compilerOptions: {
+  //   runes: true
+  // }
+};
+
+export default config;

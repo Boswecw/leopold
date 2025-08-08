@@ -4,7 +4,7 @@
   import { Plus, Map, List, Filter, Search, TrendingUp, Camera, Mic, MapPin, Calendar, Users, Grid } from 'lucide-svelte';
   
   // Import types - fixed import path
-  import type { Observation, ViewMode, ObservationType } from '$types';
+  import type { Observation, ViewMode, ObservationType } from '$lib/types';
   import { observationsStore, uiStore } from '$lib/stores';
 
   // Page state
