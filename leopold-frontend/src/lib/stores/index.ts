@@ -2,8 +2,7 @@
 import { writable, derived, type Writable } from 'svelte/store';
 import { browser } from '$app/environment';
 
-// Import types - adjust path to match your existing types file
-import type { 
+import type {
   Observation,
   User,
   ObservationFilters,
@@ -12,7 +11,7 @@ import type {
   ObservationType,
   AudioRecording,
   Location
-} from '../types/index'; // Adjust this path to match where your types/index.ts file is located
+} from '$lib/types';
 
 // ===== OBSERVATIONS STORE =====
 interface ObservationStore extends Writable<Observation[]> {
