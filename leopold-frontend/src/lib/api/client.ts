@@ -28,11 +28,22 @@ class APIClient {
   ): Promise<ApiResponse<T>> {
     const token = this.getAuthToken();
     
-    // Initialize headers properly
+    // Initialize headers and set defaults only when appropriate
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...options.headers as Record<string, string>
+      ...(options.headers as Record<string, string>)
     };
+
+    const hasContentType = Object.keys(headers).some(
+      (key) => key.toLowerCase() === 'content-type'
+    );
+
+    if (
+      options.body &&
+      typeof options.body === 'string' &&
+      !hasContentType
+    ) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (token) {
       headers.Authorization = `Bearer ${token}`;
