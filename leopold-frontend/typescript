@@ -1,340 +1,0 @@
-Script started on 2025-08-06 20:48:47-04:00 [TERM="xterm-256color" TTY="/dev/pts/9" COLUMNS="-1" LINES="-1"]
-Did you setup a `svelte.config.js`?
-See https://github.com/sveltejs/language-tools/tree/master/docs#using-with-preprocessors for more info. (svelte)
-    import { ArrowLeft, Info, MapPin, Camera, Mic } from 'lucide-svelte';
-    import type { ObservationFormData, Observation } from '$lib/types';
-
-/home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:38:32     
-Error: Property 'id' does not exist on type 'AuthState'. (ts)
-          id: crypto.randomUUID(),
-          user_id: currentUser.id,
-          user: currentUser,
-
-/home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:39:11     
-Error: Type 'AuthState' is missing the following properties from type 'User': id, email, username, created_at, updated_at (ts)
-          user_id: currentUser.id,
-          user: currentUser,
-          species_name: formData.species_name || 'Unknown Species',
-
-/home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:65:27     
-Error: Property 'add' does not exist on type 'Writable<Observation[]>'. (ts)
-        // Add to store
-        observationsStore.add(newObservation);
-
-/home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:106:11    
-Error: Object literal may only specify known properties, and 'pattern_type' does not exist in type 'AudioFeatures'. (ts)
-          duration: formData.audio_recording.duration,
-          pattern_type: ['single', 'repetitive', 'complex'][Math.floor(Math.random() * 3)] as any,
-          noise_ratio: Math.random() * 0.5,
-
-/home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:145:11    
-Error: Object literal may only specify known properties, and 'confidence' does not exist in type 'AIPredictions'. (ts)
-          }] : undefined,
-          confidence: Math.random() * 3 + 7, // 7-10
-          identification_method: observation.observation_type === 'multi-modal' ? 'multi-modal' : observation.observation_type,
-
-====================================
-svelte-check found 21 errors and 2 warnings in 10 files
-error Command failed with exit code 1.
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
-⚠️  Type check completed with errors (expected during initial setup)
-charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$
-charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ # Step 9: Try to build
-charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ echo "🏗️  Testing build..."
-🏗️  Testing build...
-charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ yarn run build || echo "⚠️  Build completed wi
-th warnings (expected)"
-yarn run v1.22.22
-$ vite build
-
-vite v7.0.6 building SSR bundle for production...
-✓ 72 modules transformed.
-✗ Build failed in 1.63s
-error during build:
-[vite-plugin-svelte] [plugin vite-plugin-svelte] src/routes/+page.svelte (7:14): /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/+page.svelte:7:14 Unexpected token
-file: /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/+page.svelte:7:14
-
-  5 |    import { observationsStore, uiStore, authStore } from '$lib/stores';
-  6 |    import { Plus, Map, List, Filter, Search, TrendingUp, Camera, Mic, MapPin, Calendar, Users } from 'lucide-svelte';
-  7 |    import type { Observation, ObservationFilters } from '$lib/types';
-                     ^
-  8 |
-  9 |    // Page state
-
-ParseError: Unexpected token
-    at error (file:///home/charles/projects/Coding2025/leopold/leopold-frontend/node_modules/svelte/src/compiler/utils/error.js:56:16)
-    at Parser.error (file:///home/charles/projects/Coding2025/leopold/leopold-frontend/node_modules/svelte/src/compiler/parse/index.js:143:3)
-    at Parser.acorn_error (file:///home/charles/projects/Coding2025/leopold/leopold-frontend/node_modules/svelte/src/compiler/parse/index.js:130:8)
-    at Object.read_script [as read] (file:///home/charles/projects/Coding2025/leopold/leopold-fronten[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ Did you setup a `svelte.config.js`?
-[?2004lsvelte.config.js: command not found
-Command 'Did' not found, did you mean:
-  command 'aid' from deb id-utils (4.6.28-20200521ss15dab)
-  command 'lid' from deb id-utils (4.6.28-20200521ss15dab)
-  command 'gid' from deb id-utils (4.6.28-20200521ss15dab)
-  command 'fid' from deb id-utils (4.6.28-20200521ss15dab)
-  command 'jid' from deb jid (0.7.6-1ubuntu0.24.04.2)
-  command 'id' from deb coreutils (9.4-2ubuntu2)
-  command 'eid' from deb id-utils (4.6.28-20200521ss15dab)
-Try: sudo apt install <deb name>
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ See https://github.com/sveltejs/language-tools/tree/master/docs#using-with-preprocessors for more info. (svelte)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$     import { ArrowLeft, Info, MapPin, Camera, Mic } from 'lucide-svelte';
-[?2004llCommand 'import' not found, but can be installed with:
-sudo apt install graphicsmagick-imagemagick-compat  # version 1.4+really1.3.42-1, or
-sudo apt install imagemagick-6.q16                  # version 8:6.9.11.60+dfsg-1.6ubuntu1
-sudo apt install imagemagick-6.q16hdri              # version 8:6.9.11.60+dfsg-1.6ubuntu1
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$     import type { ObservationFormData, Observation } from '$lib/types';
-[?2004lCommand 'import' not found, but can be installed with:
-sudo apt install graphicsmagick-imagemagick-compat  # version 1.4+really1.3.42-1, or
-sudo apt install imagemagick-6.q16                  # version 8:6.9.11.60+dfsg-1.6ubuntu1
-sudo apt install imagemagick-6.q16hdri              # version 8:6.9.11.60+dfsg-1.6ubuntu1
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 
-[?2004l[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:38:32     
-[?2004lobash: /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:38:32: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ Error: Property 'id' does not exist on type 'AuthState'. (ts)
-[?2004l:bash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$           id: crypto.randomUUID(),
-[?2004lebash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$           user_id: currentUser.id,
-[?2004luser_id:: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$           user: currentUser,
-[?2004lCommand 'user:' not found, did you mean:
-  command 'users' from deb coreutils (9.4-2ubuntu2)
-  command 'userv' from deb userv (1.2.1~beta4)
-Try: sudo apt install <deb name>
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 
-[?2004l[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:39:11     
-[?2004lbash: /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:39:11: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ Error: Type 'AuthState' is missing the following properties from type 'User': id, email, username, created_at, updated_at (ts)
-[?2004l:2bash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$           user_id: currentUser.id,
-[?2004luser_id:: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$           user: currentUser,
-[?2004lCommand 'user:' not found, did you mean:
-  command 'userv' from deb userv (1.2.1~beta4)
-  command 'users' from deb coreutils (9.4-2ubuntu2)
-Try: sudo apt install <deb name>
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$           species_name: formData.species_name || 'Unknown Species',
-[?2004lspecies_name:: command not found
-Unknown Species,: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 
-[?2004l[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:65:27     
-[?2004lbash: /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:65:27: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ Error: Property 'add' does not exist on type 'Writable<Observation[]>'. (ts)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$         // Add to store
-[?2004lbash: //: Is a directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$         observationsStore.add(newObservation); [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[K;
-[?2004lbash: syntax error near unexpected token `newObservation'
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 
-[?2004l[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:106:11    
-[?2004lbash: /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:106:11: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ Error: Object literal may only specify known properties, and 'pattern_type' does not exist in type 'AudioFeatures'. (ts)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$           duration: formData.audio_recording.duration,
-[?2004lduration:: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$           pattern_type: ['single', 'repetitive', 'complex'][Math.floor(Math.random() * 3)] as any,
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$           noise_ratio: Math.random() * 0.5,
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 
-[?2004l[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:145:11    
-[?2004lbash: /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/observations/new/+page.svelte:145:11: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ Error: Object literal may only specify known properties, and 'confidence' does not exist in type 'AIPredictions'. (ts)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$           }] : undefined,
-[?2004l}]: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$           confidence: Math.random() * 3 + 7, // 7-10
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$           identification_method: observation.observation_type === 'multi-modal' ? 'multi-modal' : observation.observation_type,
-[?2004lidentification_method:: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 
-[?2004le[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ ====================================
-[?2004l====================================: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ svelte-check found 21 errors and 2 warnings in 10 files
-[?2004lsvelte-check: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ error Command failed with exit code 1.
-[?2004lCommand 'error' not found, did you mean:
-  command 'perror' from deb mysql-server-core-8.0 (8.0.41-0ubuntu0.24.04.1)
-  command 'perror' from deb mariadb-client (1:10.11.8-0ubuntu0.24.04.1)
-Try: sudo apt install <deb name>
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
-[?2004linfo: No menu item 'Visit' in node '(dir)Top'
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ ⚠️  Type check completed with errors (expected during initial setup)
-[?2004l:~/bash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$
-[?2004lbash: charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ # Step 9: Try to build
-[?2004lbash: charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ echo "🏗️  Testing build..."
-[?2004lbash: charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 🏗️  Testing build...
-[?2004l🏗️: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ yarn run build || echo "⚠️  Build completed wi
-[?2004l[?2004h> th warnings (expected)"
-[?2004lbash: charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$: No such file or directory
-⚠️  Build completed wi
-th warnings (expected)
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ yarn run v1.22.22
-[?2004l[2K[1G[1myarn run v1.22.22[22m
-[2K[1G[31merror[39m Command "v1.22.22" not found.
-[2K[1G[34minfo[39m Visit [1mhttps://yarnpkg.com/en/docs/cli/run[22m for documentation about this command.
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ $ vite build
-[?2004l$: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 
-[?2004l[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ vite v7.0.6 building SSR bundle for production...
-[?2004l/mnt/c/Users/charl/AppData/Roaming/npm/node_modules/vite/node_modules/rollup/dist/native.js:64
-		throw new Error(
-		      ^
-
-Error: Cannot find module @rollup/rollup-linux-x64-gnu. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.
-    at requireWithFriendlyError (/mnt/c/Users/charl/AppData/Roaming/npm/node_modules/[4mvite[24m/node_modules/[4mrollup[24m/dist/native.js:64:9)
-    at Object.<anonymous> (/mnt/c/Users/charl/AppData/Roaming/npm/node_modules/[4mvite[24m/node_modules/[4mrollup[24m/dist/native.js:73:76)
-[90m    ... 3 lines matching cause stack trace ...[39m
-[90m    at Module._load (node:internal/modules/cjs/loader:1096:12)[39m
-[90m    at cjsLoader (node:internal/modules/esm/translators:298:15)[39m
-[90m    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:240:7)[39m
-[90m    at ModuleJob.run (node:internal/modules/esm/module_job:263:25)[39m
-[90m    at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)[39m {
-  [cause]: Error: Cannot find module '@rollup/rollup-linux-x64-gnu'
-  Require stack:
-  - /mnt/c/Users/charl/AppData/Roaming/npm/node_modules/vite/node_modules/rollup/dist/native.js
-  [90m    at Module._resolveFilename (node:internal/modules/cjs/loader:1212:15)[39m
-  [90m    at Module._load (node:internal/modules/cjs/loader:1043:27)[39m
-  [90m    at Module.require (node:internal/modules/cjs/loader:1298:19)[39m
-  [90m    at require (node:internal/modules/helpers:182:18)[39m
-      at requireWithFriendlyError (/mnt/c/Users/charl/AppData/Roaming/npm/node_modules/[4mvite[24m/node_modules/[4mrollup[24m/dist/native.js:46:10)
-      at Object.<anonymous> (/mnt/c/Users/charl/AppData/Roaming/npm/node_modules/[4mvite[24m/node_modules/[4mrollup[24m/dist/native.js:73:76)
-  [90m    at Module._compile (node:internal/modules/cjs/loader:1529:14)[39m
-  [90m    at Module._extensions..js (node:internal/modules/cjs/loader:1613:10)[39m
-  [90m    at Module.load (node:internal/modules/cjs/loader:1275:32)[39m
-  [90m    at Module._load (node:internal/modules/cjs/loader:1096:12)[39m {
-    code: [32m'MODULE_NOT_FOUND'[39m,
-    requireStack: [
-      [32m'/mnt/c/Users/charl/AppData/Roaming/npm/node_modules/vite/node_modules/rollup/dist/native.js'[39m
-    ]
-  }
-}
-
-Node.js v20.19.4
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ ✓ 72 modules transformed.
-[?2004l✓: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ ✗ Build failed in 1.63s
-[?2004l✗: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ error during build:
-[?2004lCommand 'error' not found, did you mean:
-  command 'perror' from deb mysql-server-core-8.0 (8.0.41-0ubuntu0.24.04.1)
-  command 'perror' from deb mariadb-client (1:10.11.8-0ubuntu0.24.04.1)
-Try: sudo apt install <deb name>
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ [vite-plugin-svelte] [plugin vite-plugin-svelte] src/routes/+page.svelte (7:14): /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/+page.svelte:7:14 Unexpected token
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ file: /home/charles/projects/Coding2025/leopold/leopold-frontend/src/routes/+page.svelte:7:14
-[?2004lCommand 'file:' not found, did you mean:
-  command 'file2' from deb file-kanji (1.1-20)
-  command 'file' from deb file (1:5.45-2)
-Try: sudo apt install <deb name>
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 
-[?2004l[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$   5 |    import { observationsStore, uiStore, authStore } from '$lib/stores';
-[?2004l5: command not found
-Command 'import' not found, but can be installed with:
-sudo apt install graphicsmagick-imagemagick-compat  # version 1.4+really1.3.42-1, or
-sudo apt install imagemagick-6.q16                  # version 8:6.9.11.60+dfsg-1.6ubuntu1
-sudo apt install imagemagick-6.q16hdri              # version 8:6.9.11.60+dfsg-1.6ubuntu1
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$   6 |    import { Plus, Map, List, Filter, Search, TrendingUp, Camera, Mic, MapPin, Calendar, Users } from 'lucide-svelte';
-[?2004l6: command not found
-Command 'import' not found, but can be installed with:
-sudo apt install graphicsmagick-imagemagick-compat  # version 1.4+really1.3.42-1, or
-sudo apt install imagemagick-6.q16                  # version 8:6.9.11.60+dfsg-1.6ubuntu1
-sudo apt install imagemagick-6.q16hdri              # version 8:6.9.11.60+dfsg-1.6ubuntu1
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$   7 |    import type { Observation, ObservationFilters } from '$lib/types';
-[?2004l7: command not found
-Command 'import' not found, but can be installed with:
-sudo apt install graphicsmagick-imagemagick-compat  # version 1.4+really1.3.42-1, or
-sudo apt install imagemagick-6.q16                  # version 8:6.9.11.60+dfsg-1.6ubuntu1
-sudo apt install imagemagick-6.q16hdri              # version 8:6.9.11.60+dfsg-1.6ubuntu1
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$                      ^
-[?2004l^: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$   8 |
-[?2004l[?2004h>   9 |    // Page state
-[?2004lbash: //: Is a directory
-9: command not found
-8: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 
-[?2004l[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ ParseError: Unexpected token
-[?2004lParseError:: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$     at error (file:///home/charles/projects/Coding2025/leopold/leopold-frontend/node_modules/svelte/src/compiler/utils/error.js:56:16)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$     at Parser.error (file:///home/charles/projects/Coding2025/leopold/leopold-frontend/node_modules/svelte/src/compiler/parse/index.js:143:3)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$     at Parser.acorn_error (file:///home/charles/projects/Coding2025/leopold/leopold-frontend/node_modules/svelte/src/compiler/parse/index.js:130:8)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$     at Object.read_script [as read] (file:///home/charles/projects/Coding2025/leopold/leopold-frontend/node_modules/svelte/src/compiler/parse/read/script.js:50:10)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$     at tag (file:///home/charles/projects/Coding2025/leopold/leopold-frontend/node_modules/svelte/src/compiler/parse/state/tag.js:203:27)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$     at new Parser (file:///home/charles/projects/Coding2025/leopold/leopold-frontend/node_modules/svelte/src/compiler/parse/index.js:91:12)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$     at parse (file:///home/charles/projects/Coding2025/leopold/leopold-frontend/node_modules/svelte/src/compiler/parse/index.js:268:17)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$     at Module.compile (file:///home/charles/projects/Coding2025/leopold/leopold-frontend/node_modules/svelte/src/compiler/compile/index.js:136:14)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$     at compileSvelte (file:///home/charles/projects/Coding2025/leopold/leopold-frontend/node_modules/@sveltejs/kit/node_modules/@sveltejs/vite-plugin-svelte/src/utils/compile.js:128:27)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$     at async Object.transform (file:///home/charles/projects/Coding2025/leopold/leopold-frontend/node_modules/@sveltejs/kit/node_modules/@sveltejs/vite-plugin-svelte/src/index.js:223:20)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ error Command failed with exit code 1.
-[?2004lCommand 'error' not found, did you mean:
-  command 'perror' from deb mysql-server-core-8.0 (8.0.41-0ubuntu0.24.04.1)
-  command 'perror' from deb mariadb-client (1:10.11.8-0ubuntu0.24.04.1)
-Try: sudo apt install <deb name>
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
-[?2004linfo: No menu item 'Visit' in node '(dir)Top'
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ ⚠️  Build completed with warnings (expected)
-[?2004lbash: syntax error near unexpected token `('
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$
-[?2004lbash: charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ echo "🎉 Fix script completed!"
-[?2004lbash: charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 🎉 Fix script completed!
-[?2004l🎉: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ echo ""
-[?2004lbash: charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 
-[?2004l[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ echo "Next steps:"
-[?2004lbash: charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ Next steps:
-[?2004lCommand 'Next' not found, did you mean:
-  command 'next' from deb mailutils-mh (1:3.16-1build1)
-  command 'next' from deb mmh (0.4-6)
-  command 'next' from deb nmh (1.8-1)
-Try: sudo apt install <deb name>
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ echo "1. Check that all components have proper lang=\"ts\" in script tags"
-[?2004lbash: charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 1. Check that all components have proper lang="ts" in script tags
-[?2004l1.: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ echo "2. Replace any remaining 'null' with 'undefined' for Location types"
-[?2004lbash: charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 2. Replace any remaining 'null' with 'undefined' for Location types
-[?2004l2.: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ echo "3. Update audioFeatures prop to use flattened array: audioFeatures={data?.[0]}"
-[?2004lbash: charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 3. Update audioFeatures prop to use flattened array: audioFeatures={data?.[0]}
-[?2004l3.: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ echo "4. Run 'yarn run check' to verify remaining issues"
-[?2004lbash: charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 4. Run 'yarn run check' to verify remaining issues
-[?2004l4.: command not found
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$ 
-[?2004lbash: charles@Charlie:~/projects/Coding2025/leopold/leopold-frontend$: No such file or directory
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 
-[?2004l[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ ^C[?2004l[?2004h[?2004l
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ ^C[?2004l[?2004h[?2004l
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ ^C[?2004l[?2004h[?2004l
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ ^C[?2004l[?2004h[?2004l
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ ^C[?2004l[?2004h[?2004l
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ ^C[?2004l[?2004h[?2004l
-[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ 
-[?2004l[?2004h]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ [K]0;charles@Charlie: ~/projects/Coding2025/leopold/leopold-frontend[01;32mcharles@Charlie[00m:[01;34m~/projects/Coding2025/leopold/leopold-frontend[00m$ [?2004l
-exit
-
-Script done on 2025-08-06 20:50:21-04:00 [COMMAND_EXIT_CODE="130"]
