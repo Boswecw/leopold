@@ -1,0 +1,78 @@
+<!-- src/app.html -->
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Leopold Nature Observer - Track and discover wildlife through community science" />
+    <meta name="theme-color" content="#2F5D50" />
+
+    <!-- Favicons & Icons -->
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Social Media / Open Graph -->
+    <meta property="og:title" content="Leopold Nature Observer" />
+    <meta property="og:description" content="Track and discover wildlife through community science" />
+    <meta property="og:image" content="/leopold-social.jpg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://leopold-app.example.com" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    
+		<link rel="modulepreload" href="/leopold/_app/immutable/entry/start.DTv1OV_p.js">
+		<link rel="modulepreload" href="/leopold/_app/immutable/chunks/CMWlCmse.js">
+		<link rel="modulepreload" href="/leopold/_app/immutable/chunks/DnGBHVzR.js">
+		<link rel="modulepreload" href="/leopold/_app/immutable/chunks/CIFLboCm.js">
+		<link rel="modulepreload" href="/leopold/_app/immutable/entry/app.CTyp9bIP.js">
+		<link rel="modulepreload" href="/leopold/_app/immutable/chunks/C1FmrZbK.js">
+		<link rel="modulepreload" href="/leopold/_app/immutable/chunks/IHki7fMi.js">
+  </head>
+  <body class="h-full bg-neutral-off-white font-nature antialiased" data-sveltekit-preload-data="hover">
+    <div style="display: contents" class="contents">
+			<script>
+				{
+					__sveltekit_1o8cleh = {
+						base: "/leopold",
+						assets: "/leopold"
+					};
+
+					const element = document.currentScript.parentElement;
+
+					Promise.all([
+						import("/leopold/_app/immutable/entry/start.DTv1OV_p.js"),
+						import("/leopold/_app/immutable/entry/app.CTyp9bIP.js")
+					]).then(([kit, app]) => {
+						kit.start(app, element);
+					});
+
+					if ('serviceWorker' in navigator) {
+						addEventListener('load', function () {
+							navigator.serviceWorker.register('/leopold/service-worker.js');
+						});
+					}
+				}
+			</script>
+		</div>
+
+    <!-- Safe PWA Service Worker Registration -->
+    <script>
+      if (
+        'serviceWorker' in navigator &&
+        location.protocol === 'https:' &&
+        location.hostname !== 'localhost'
+      ) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW registered:', reg))
+            .catch(err => console.error('SW registration failed:', err));
+        });
+      }
+    </script>
+  </body>
+</html>

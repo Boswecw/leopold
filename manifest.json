@@ -1,0 +1,108 @@
+{
+    "name": "Leopold Nature Observer",
+    "short_name": "Leopold",
+    "description": "Track and discover wildlife through community science",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "theme_color": "#2F5D50",
+    "background_color": "#FAFAF9",
+    "categories": ["education", "lifestyle", "utilities"],
+    "lang": "en-US",
+    "dir": "ltr",
+    "icons": [
+      {
+        "src": "/icons/icon-72.png",
+        "sizes": "72x72",
+        "type": "image/png",
+        "purpose": "maskable any"
+      },
+      {
+        "src": "/icons/icon-96.png",
+        "sizes": "96x96",
+        "type": "image/png",
+        "purpose": "maskable any"
+      },
+      {
+        "src": "/icons/icon-128.png",
+        "sizes": "128x128", 
+        "type": "image/png",
+        "purpose": "maskable any"
+      },
+      {
+        "src": "/icons/icon-144.png",
+        "sizes": "144x144",
+        "type": "image/png",
+        "purpose": "maskable any"
+      },
+      {
+        "src": "/icons/icon-152.png",
+        "sizes": "152x152",
+        "type": "image/png",
+        "purpose": "maskable any"
+      },
+      {
+        "src": "/icons/icon-192.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "maskable any"
+      },
+      {
+        "src": "/icons/icon-384.png",
+        "sizes": "384x384",
+        "type": "image/png",
+        "purpose": "maskable any"
+      },
+      {
+        "src": "/icons/icon-512.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "maskable any"
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/screenshots/desktop-1.png",
+        "sizes": "1280x720",
+        "type": "image/png",
+        "form_factor": "wide",
+        "label": "Leopold Nature Observer - Main Map View"
+      },
+      {
+        "src": "/screenshots/mobile-1.png", 
+        "sizes": "390x844",
+        "type": "image/png",
+        "form_factor": "narrow",
+        "label": "Leopold Nature Observer - Mobile View"
+      }
+    ],
+    "shortcuts": [
+      {
+        "name": "New Observation",
+        "short_name": "New",
+        "description": "Record a new wildlife observation",
+        "url": "/observations/new",
+        "icons": [
+          {
+            "src": "/icons/shortcut-new.png",
+            "sizes": "96x96"
+          }
+        ]
+      },
+      {
+        "name": "My Observations", 
+        "short_name": "Mine",
+        "description": "View your recorded observations",
+        "url": "/observations/mine",
+        "icons": [
+          {
+            "src": "/icons/shortcut-mine.png",
+            "sizes": "96x96"
+          }
+        ]
+      }
+    ],
+    "related_applications": [],
+    "prefer_related_applications": false
+  }
