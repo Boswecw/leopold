@@ -18,7 +18,15 @@ export function validateObservationForm(data: Partial<ObservationFormData>): Val
     errors.location = 'Location is required';
   } else {
     // Validate location
-    if (!data.location.latitude || !data.location.longitude) {
+    const { latitude, longitude } = data.location;
+    if (
+      latitude === undefined ||
+      latitude === null ||
+      isNaN(latitude) ||
+      longitude === undefined ||
+      longitude === null ||
+      isNaN(longitude)
+    ) {
       errors.location = 'Valid coordinates are required';
     }
   }
@@ -32,12 +40,21 @@ export function validateObservationForm(data: Partial<ObservationFormData>): Val
     warnings.notes = 'Notes are quite long. Consider shortening them.';
   }
 
-  if (data.count && data.count < 1) {
-    errors.count = 'Count must be at least 1';
+  if (data.count !== undefined) {
+    if (typeof data.count !== 'number' || isNaN(data.count) || data.count < 1) {
+      errors.count = 'Count must be at least 1';
+    }
   }
 
-  if (data.confidence && (data.confidence < 1 || data.confidence > 5)) {
-    errors.confidence = 'Confidence must be between 1 and 5';
+  if (data.confidence !== undefined) {
+    if (
+      typeof data.confidence !== 'number' ||
+      isNaN(data.confidence) ||
+      data.confidence < 1 ||
+      data.confidence > 5
+    ) {
+      errors.confidence = 'Confidence must be between 1 and 5';
+    }
   }
 
   return {
