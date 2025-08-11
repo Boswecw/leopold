@@ -1,18 +1,25 @@
-import adapter from '@sveltejs/adapter-auto';
+import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
+const dev = process.env.NODE_ENV !== 'production';
+const base = dev ? '' : '/leopold';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-  // Consult https://kit.svelte.dev/docs/integrations#preprocessors
-  // for more information about preprocessors
   preprocess: vitePreprocess(),
 
   kit: {
-    // adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.
-    // If your environment is not supported or you settled on a specific environment, switch out the adapter.
-    // See https://kit.svelte.dev/docs/adapters for more information about adapters.
+    // Use static adapter for GitHub Pages
     adapter: adapter(),
-    
+
+    // Set base path for GH Pages
+    paths: {
+      base
+    },
+
+    // Always use trailing slash on URLs
+    trailingSlash: 'always',
+
     // Configure path aliases
     alias: {
       $lib: 'src/lib',
@@ -34,13 +41,13 @@ const config = {
     // Enable service worker for PWA
     serviceWorker: {
       register: true
+    },
+
+    // Prerender everything for static hosting
+    prerender: {
+      entries: ['*']
     }
   }
-
-  // NOTE: Removed runes: true - this was causing Svelte 5 mode
-  // compilerOptions: {
-  //   runes: true
-  // }
 };
 
 export default config;
