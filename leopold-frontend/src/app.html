@@ -1,5 +1,4 @@
-<!-- src/app.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="h-full">
   <head>
     <meta charset="utf-8" />
@@ -7,17 +6,20 @@
     <meta name="description" content="Leopold Nature Observer - Track and discover wildlife through community science" />
     <meta name="theme-color" content="#2F5D50" />
 
-    <!-- Favicons & Icons -->
-    <link rel="icon" href="/favicon.png" type="image/png" />
-    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- Make all relative URLs resolve under the repo path -->
+    <base href="%sveltekit.base%" />
 
-    <!-- Social Media / Open Graph -->
+    <!-- Favicons & Manifest must use assets path -->
+    <link rel="icon" href="%sveltekit.assets%/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="%sveltekit.assets%/icons/icon-192.png" />
+    <link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
+
+    <!-- Social / Open Graph -->
     <meta property="og:title" content="Leopold Nature Observer" />
     <meta property="og:description" content="Track and discover wildlife through community science" />
-    <meta property="og:image" content="/leopold-social.jpg" />
+    <meta property="og:image" content="%sveltekit.assets%/leopold-social.jpg" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://leopold-app.example.com" />
+    <meta property="og:url" content="https://boswecw.github.io/leopold/" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,21 +29,6 @@
     %sveltekit.head%
   </head>
   <body class="h-full bg-neutral-off-white font-nature antialiased" data-sveltekit-preload-data="hover">
-    <div style="display: contents" class="contents">%sveltekit.body%</div>
-
-    <!-- Safe PWA Service Worker Registration -->
-    <script>
-      if (
-        'serviceWorker' in navigator &&
-        location.protocol === 'https:' &&
-        location.hostname !== 'localhost'
-      ) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js')
-            .then(reg => console.log('SW registered:', reg))
-            .catch(err => console.error('SW registration failed:', err));
-        });
-      }
-    </script>
+    <div style="display: contents">%sveltekit.body%</div>
   </body>
 </html>
