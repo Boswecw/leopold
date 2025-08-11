@@ -790,9 +790,18 @@ export function validateUserRegistration(data: {
  * Sanitize HTML to prevent XSS
  */
 export function sanitizeHtml(html: string): string {
-  const div = document.createElement('div');
-  div.textContent = html;
-  return div.innerHTML;
+  if (typeof document !== 'undefined') {
+    const div = document.createElement('div');
+    div.textContent = html;
+    return div.innerHTML;
+  }
+
+  return html
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /**
