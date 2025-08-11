@@ -64,7 +64,7 @@
         region: 'Central Park, New York'
       },
       timestamp: new Date().toISOString(),
-      image_urls: ['https://example.com/robin1.jpg'],
+      images: ['https://example.com/robin1.jpg'],
       notes: 'Spotted feeding on the ground near the Bethesda Fountain',
       count: 2,
       confidence: 4,
@@ -88,7 +88,7 @@
         region: 'Washington Square Park, New York'
       },
       timestamp: new Date().toISOString(),
-      audio_url: 'https://example.com/cardinal.mp3',
+      audio_recording: { url: 'https://example.com/cardinal.mp3', duration: 12 },
       notes: 'Beautiful morning song from male cardinal',
       count: 1,
       confidence: 5,
@@ -110,8 +110,8 @@
         region: 'Manuel Antonio, Costa Rica'
       },
       timestamp: new Date().toISOString(),
-      image_urls: ['https://example.com/treefrog1.jpg', 'https://example.com/treefrog2.jpg'],
-      audio_url: 'https://example.com/treefrog.mp3',
+      images: ['https://example.com/treefrog1.jpg', 'https://example.com/treefrog2.jpg'],
+      audio_recording: { url: 'https://example.com/treefrog.mp3', duration: 15 },
       notes: 'Found during night survey near stream. Very active and vocal.',
       count: 3,
       confidence: 4,

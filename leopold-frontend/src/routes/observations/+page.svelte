@@ -53,7 +53,7 @@
           created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
           updated_at: new Date().toISOString(),
           description: 'Spotted feeding on the ground near the Bethesda Fountain',
-          image_urls: ['placeholder-robin.jpg'],
+          images: ['placeholder-robin.jpg'],
           count: 2,
           confidence: 4,
           weather_conditions: 'Partly cloudy, 18°C',
@@ -74,7 +74,7 @@
           created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
           updated_at: new Date().toISOString(),
           description: 'Beautiful morning song from male cardinal',
-          audio_url: 'placeholder-cardinal.mp3',
+          audio_recording: { url: 'placeholder-cardinal.mp3', duration: 10 },
           count: 1,
           confidence: 5,
           weather_conditions: 'Clear, 22°C'
@@ -93,8 +93,8 @@
           created_at: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
           updated_at: new Date().toISOString(),
           description: 'Male displaying territorial behavior near marsh area',
-          image_urls: ['placeholder-blackbird.jpg'],
-          audio_url: 'placeholder-blackbird.mp3',
+          images: ['placeholder-blackbird.jpg'],
+          audio_recording: { url: 'placeholder-blackbird.mp3', duration: 8 },
           count: 1,
           confidence: 5,
           weather_conditions: 'Overcast, 16°C',
@@ -414,11 +414,11 @@
             <div class="observation-item bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
               <div class="flex items-start gap-4">
                 <div class="flex-shrink-0">
-                  {#if observation.image_urls && observation.image_urls.length > 0}
+                  {#if observation.images && observation.images.length > 0}
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                       <Camera class="w-6 h-6 text-blue-600" />
                     </div>
-                  {:else if observation.audio_url}
+                  {:else if observation.audio_recording}
                     <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                       <Mic class="w-6 h-6 text-green-600" />
                     </div>
@@ -484,12 +484,12 @@
           {#each filteredObservations as observation (observation.id)}
             <div class="observation-card bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
               <div class="card-header h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative">
-                {#if observation.image_urls && observation.image_urls.length > 0}
+                {#if observation.images && observation.images.length > 0}
                   <Camera class="w-12 h-12 text-gray-500" />
                   <span class="absolute top-2 right-2 px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
                     Photo
                   </span>
-                {:else if observation.audio_url}
+                {:else if observation.audio_recording}
                   <Mic class="w-12 h-12 text-green-600" />
                   <span class="absolute top-2 right-2 px-2 py-1 bg-green-600 text-white text-xs rounded-full">
                     Audio

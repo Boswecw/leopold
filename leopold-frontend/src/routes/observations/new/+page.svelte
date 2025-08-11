@@ -68,16 +68,18 @@
       if (submittedData.images && submittedData.images.length > 0) {
         // In a real app, you'd upload images to a server first
         // For now, create placeholder URLs
-        newObservation.image_urls = submittedData.images.map((file, index) => 
-          `placeholder-image-${index + 1}.jpg`
+        newObservation.images = submittedData.images.map(
+          (file, index) => `placeholder-image-${index + 1}.jpg`
         );
-        newObservation.images = submittedData.images.map(file => file.name);
       }
 
       // Handle audio recording if present
       if (submittedData.audio_recording) {
         // In a real app, you'd upload audio to a server first
-        newObservation.audio_url = 'placeholder-audio.mp3';
+        newObservation.audio_recording = {
+          url: 'placeholder-audio.mp3',
+          duration: submittedData.audio_recording.duration || 0
+        };
         
         // Create audio features with all required properties - fixed missing pattern_type
         newObservation.audio_features = {
