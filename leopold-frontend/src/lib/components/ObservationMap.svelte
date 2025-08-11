@@ -41,8 +41,11 @@
   let isInitialized = false;
 
   // Filter state
-  let activeFilters = $filtersStore;
+  let activeFilters;
   let showFilterPanel = false;
+
+  // Keep active filters in sync with the store
+  $: activeFilters = $filtersStore;
   
   let layerControls: Record<ObservationType | 'verified', boolean> = {
     visual: true,
