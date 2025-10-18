@@ -9,8 +9,7 @@ import type {
   LoadingState,
   NotificationType,
   ObservationType,
-  AudioRecording,
-  Location
+  AudioRecording
 } from '$lib/types';
 
 // ===== OBSERVATIONS STORE =====
@@ -193,7 +192,7 @@ interface Notification {
 interface Modal {
   isOpen: boolean;
   component: string | null;
-  props: Record<string, any>;
+  props: Record<string, unknown>;
 }
 
 interface Sidebar {
@@ -214,7 +213,7 @@ interface UIStore extends Writable<UIState> {
   showNotification: (type: NotificationType, message: string, duration?: number) => string;
   removeNotification: (id: string) => void;
   clearNotifications: () => void;
-  openModal: (component: string, props?: Record<string, any>) => void;
+  openModal: (component: string, props?: Record<string, unknown>) => void;
   closeModal: () => void;
   toggleSidebar: () => void;
   openSidebar: () => void;
@@ -286,7 +285,7 @@ function createUIStore(): UIStore {
     clearNotifications: () =>
       update((ui: UIState) => ({ ...ui, notifications: [] })),
     // Modals
-    openModal: (component: string, props: Record<string, any> = {}) =>
+    openModal: (component: string, props: Record<string, unknown> = {}) =>
       update((ui: UIState) => ({
         ...ui,
         modals: {
@@ -674,8 +673,8 @@ export const filteredObservations = derived(
     const sortOrder = filters.sortOrder || 'desc';
     
     filtered.sort((a: Observation, b: Observation) => {
-      let aValue: any = (a as any)[sortBy];
-      let bValue: any = (b as any)[sortBy];
+      let aValue: unknown = (a as Record<string, unknown>)[sortBy];
+      let bValue: unknown = (b as Record<string, unknown>)[sortBy];
       
       // Handle date sorting
       if (sortBy.includes('_at')) {

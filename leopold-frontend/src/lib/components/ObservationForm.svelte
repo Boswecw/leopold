@@ -1,4 +1,7 @@
 <!-- ObservationForm.svelte - IMPROVED VERSION -->
+<!-- @component
+no description yet
+-->
 <script lang="ts">
 	import { slide } from 'svelte/transition';
 	import { onMount, createEventDispatcher } from 'svelte';
@@ -117,7 +120,7 @@
 		  // All fields are optional, so this step is always valid
 		  break;
   
-		case 5: // Review
+		case 5: { // Review
 		  // Validate entire form
 		  const formData: Partial<ObservationFormData> = {
 			observation_type: observationType,
@@ -135,13 +138,14 @@
 			behavior_notes: behaviorNotes.trim() || undefined,
 			tags: tags.length > 0 ? tags : undefined
 		  };
-  
+
 		  const validation = validateObservationForm(formData);
 		  if (!validation.isValid) {
 			validationErrors = validation.errors;
 			currentStepValid = false;
 		  }
 		  break;
+	}
 	  }
   
 	  dispatch('stepChanged', { step: currentStep, isValid: currentStepValid });
@@ -275,13 +279,7 @@
 	$: progressPercentage = (currentStep / totalSteps) * 100;
   
 	// Reactive validation
-	$: {
-	  // Re-validate when key values change
-	  observationType;
-	  selectedImages;
-	  audioRecording;
-	  location;
-	  selectedSpecies;
+	$: if (observationType || selectedImages || audioRecording || location || selectedSpecies) {
 	  validateCurrentStep();
 	}
   </script>

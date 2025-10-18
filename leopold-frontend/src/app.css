@@ -6,23 +6,56 @@
 
 /* ==================== GLOBAL VARIABLES ==================== */
 :root {
-  /* Leopold Nature-Inspired Color Palette */
+  /* Leopold Nature-Inspired Color Palette - Light Mode */
   --color-primary-forest: #2F5D50;
   --color-primary-earth: #5C4033;
   --color-primary-sky: #76B4BD;
-  
+
   --color-secondary-moss: #A3B18A;
   --color-secondary-goldenrod: #DAA520;
   --color-secondary-sand: #F3E9DC;
-  
+
   --color-neutral-off-white: #FAFAF9;
   --color-neutral-stone-gray: #4B4B4B;
   --color-neutral-soft-black: #1C1C1C;
-  
+
   /* Audio Visualization Colors */
   --color-audio-waveform: #76B4BD;
   --color-audio-spectrogram: #2F5D50;
   --color-audio-recording: #dc2626;
+
+  /* Background and Text Colors */
+  --bg-primary: #FAFAF9;
+  --bg-secondary: #F3E9DC;
+  --text-primary: #1C1C1C;
+  --text-secondary: #4B4B4B;
+}
+
+/* Dark Mode Variables */
+:root.dark {
+  /* Darker versions of Leopold colors for dark mode */
+  --color-primary-forest: #4A8A6F;
+  --color-primary-earth: #8B6F47;
+  --color-primary-sky: #5FA5B8;
+
+  --color-secondary-moss: #7A9B6D;
+  --color-secondary-goldenrod: #E8C547;
+  --color-secondary-sand: #D4C5B0;
+
+  --color-neutral-off-white: #1A1A1A;
+  --color-neutral-stone-gray: #B0B0B0;
+  --color-neutral-soft-black: #F5F5F5;
+
+  /* Audio Visualization Colors */
+  --color-audio-waveform: #5FA5B8;
+  --color-audio-spectrogram: #4A8A6F;
+  --color-audio-recording: #ff6b6b;
+
+  /* Background and Text Colors */
+  --bg-primary: #1A1A1A;
+  --bg-secondary: #2D2D2D;
+  --text-primary: #F5F5F5;
+  --text-secondary: #B0B0B0;
   
   /* Spacing Scale */
   --spacing-xs: 0.25rem;
@@ -87,8 +120,9 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-family: var(--font-family-nature);
-    background-color: var(--color-neutral-off-white);
-    color: var(--color-neutral-soft-black);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   img,

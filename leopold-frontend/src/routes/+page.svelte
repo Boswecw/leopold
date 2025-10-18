@@ -4,8 +4,6 @@
   import { goto } from '$app/navigation';
   import { observationsStore } from '$lib/stores';
   import { Plus, Map, List, Search, TrendingUp, Camera, Mic, MapPin, Calendar, Users } from 'lucide-svelte';
-  
-  // Import types
   import type { Observation, User, ViewMode, ObservationType } from '$lib/types';
   
   // Type definitions for this component
@@ -166,7 +164,7 @@
   }
 
   // Filter handlers
-  function handleFilterChange(filterType: keyof ObservationFilters, value: any) {
+  function handleFilterChange(filterType: keyof ObservationFilters, value: unknown) {
     selectedFilters = { ...selectedFilters, [filterType]: value };
   }
 

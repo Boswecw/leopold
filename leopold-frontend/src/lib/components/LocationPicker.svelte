@@ -1,3 +1,6 @@
+<!-- @component
+no description yet
+-->
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { browser } from '$app/environment';
@@ -13,12 +16,12 @@
 
   // Component state
   let searchQuery = '';
-  let searchResults: any[] = [];
+  let searchResults: Location[] = [];
   let isSearching = false;
   let isGettingLocation = false;
   let mapContainer: HTMLDivElement;
-  let map: any = null;
-  let marker: any = null;
+  let map: unknown = null;
+  let marker: unknown = null;
   let searchTimeout: NodeJS.Timeout;
 
   // Manual coordinates
@@ -59,9 +62,10 @@
       }).addTo(map);
 
       // Handle map clicks
-      map.on('click', (e: any) => {
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
+      map.on('click', (e: Record<string, unknown>) => {
+        const latlng = e.latlng as Record<string, number>;
+        const lat = latlng.lat;
+        const lng = latlng.lng;
         selectLocationFromMap(lat, lng);
       });
 
@@ -158,12 +162,14 @@
       if (!response.ok) throw new Error('Search failed');
       
       const results = await response.json();
-      searchResults = results.map((result: any) => ({
-        display_name: result.display_name,
-        latitude: parseFloat(result.lat),
-        longitude: parseFloat(result.lon),
-        type: result.type,
-        importance: result.importance
+      searchResults = results.map((result: Record<string, unknown>) => ({
+        latitude: parseFloat(result.lat as string),
+        longitude: parseFloat(result.lon as string),
+        altitude: undefined,
+        accuracy: undefined,
+        region: result.type as string,
+        country: undefined,
+        address: result.display_name as string
       }));
     } catch (error) {
       console.error('Search error:', error);
@@ -174,18 +180,11 @@
     }
   }
 
-  function selectSearchResult(result: any) {
-    const newLocation: Location = {
-      latitude: result.latitude,
-      longitude: result.longitude,
-      accuracy: undefined,
-      region: result.display_name
-    };
-    
-    updateLocation(newLocation);
-    if (map) updateMapLocation(newLocation);
-    
-    searchQuery = result.display_name;
+  function selectSearchResult(result: Location) {
+    updateLocation(result);
+    if (map) updateMapLocation(result);
+
+    searchQuery = result.address || '';
     searchResults = [];
   }
 
@@ -314,7 +313,7 @@
           >
             <div class="flex items-center gap-2">
               <MapPin class="w-3 h-3 text-gray-400 flex-shrink-0" />
-              <span class="text-sm text-gray-900 line-clamp-2">{result.display_name}</span>
+              <span class="text-sm text-gray-900 line-clamp-2">{result.address || `${result.latitude}, ${result.longitude}`}</span>
             </div>
           </button>
         {/each}

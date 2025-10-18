@@ -73,7 +73,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 });
 
 // Background sync
-self.addEventListener('sync', (event: any) => {
+self.addEventListener('sync', (event: SyncEvent) => {
   if (event.tag === 'sync-observations') {
     event.waitUntil(syncObservations());
   }

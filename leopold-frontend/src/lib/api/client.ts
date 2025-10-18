@@ -3,7 +3,9 @@ import type {
   ApiResponse,
   User,
   Observation,
-  ObservationFormData
+  ObservationFormData,
+  Species,
+  Location
 } from '$lib/types';
 
 const API_BASE_URL = browser ? 
@@ -178,17 +180,17 @@ class APIClient {
   }
 
   // Species methods
-  async searchSpecies(query: string, location?: { lat: number; lng: number }): Promise<ApiResponse<any[]>> {
+  async searchSpecies(query: string, location?: { lat: number; lng: number }): Promise<ApiResponse<Species[]>> {
     const searchParams = new URLSearchParams({ q: query });
     if (location) {
       searchParams.set('lat', location.lat.toString());
       searchParams.set('lng', location.lng.toString());
     }
-    
+
     return this.request(`/species/search?${searchParams.toString()}`);
   }
 
-  async getSpecies(id: string): Promise<ApiResponse<any>> {
+  async getSpecies(id: string): Promise<ApiResponse<Species>> {
     return this.request(`/species/${id}`);
   }
 
@@ -284,15 +286,15 @@ class APIClient {
   }
 
   // Location/geocoding methods
-  async geocodeLocation(query: string): Promise<ApiResponse<any[]>> {
+  async geocodeLocation(query: string): Promise<ApiResponse<Location[]>> {
     const searchParams = new URLSearchParams({ q: query });
     return this.request(`/geocode?${searchParams.toString()}`);
   }
 
-  async reverseGeocode(lat: number, lng: number): Promise<ApiResponse<any>> {
-    const searchParams = new URLSearchParams({ 
-      lat: lat.toString(), 
-      lng: lng.toString() 
+  async reverseGeocode(lat: number, lng: number): Promise<ApiResponse<Location>> {
+    const searchParams = new URLSearchParams({
+      lat: lat.toString(),
+      lng: lng.toString()
     });
     return this.request(`/geocode/reverse?${searchParams.toString()}`);
   }

@@ -260,7 +260,7 @@ export interface PaginationInfo {
 export interface ApiError {
   code: string;
   message: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   timestamp: string;
 }
 
@@ -273,15 +273,15 @@ export interface ValidationResult {
 
 export interface FieldValidation {
   field: string;
-  value: any;
+  value: unknown;
   rules: ValidationRule[];
 }
 
 export interface ValidationRule {
   type: 'required' | 'minLength' | 'maxLength' | 'pattern' | 'email' | 'url' | 'custom';
-  value?: any;
+  value?: unknown;
   message: string;
-  validator?: (value: any) => boolean;
+  validator?: (value: unknown) => boolean;
 }
 
 // ===== GAMIFICATION TYPES =====
@@ -312,7 +312,7 @@ export interface BadgeRequirement {
   type: 'observation_count' | 'species_count' | 'location_count' | 'verification_count' | 'community_engagement';
   value: number;
   timeframe?: 'all_time' | 'yearly' | 'monthly' | 'weekly';
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
 }
 
 export interface UserStats {
@@ -377,13 +377,13 @@ export interface SearchResult {
   image_url?: string;
   relevance_score: number;
   url: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // ===== EVENT TYPES =====
 export interface AppEvent {
   type: string;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   timestamp: number;
   source: 'user' | 'system' | 'api';
 }
@@ -393,11 +393,49 @@ export interface UserEvent extends AppEvent {
   session_id: string;
 }
 
+// ===== FEEDBACK TYPES =====
+export interface Feedback {
+  id: string;
+  user_id: string;
+  rating: number;
+  category: 'general' | 'bug' | 'feature' | 'performance' | 'accessibility';
+  message: string;
+  email?: string;
+  created_at: string;
+  status: 'new' | 'reviewed' | 'resolved';
+}
+
+// ===== LEADERBOARD TYPES =====
+export interface LeaderboardEntry {
+  rank: number;
+  user_id: string;
+  username: string;
+  avatar_url?: string;
+  score: number;
+  observations: number;
+  streak?: number;
+}
+
+// ===== DASHBOARD TYPES =====
+export interface DashboardWidget {
+  id: string;
+  type: 'stats' | 'chart' | 'leaderboard' | 'recent-observations' | 'badges';
+  position: number;
+  visible: boolean;
+  config?: Record<string, unknown>;
+}
+
+export interface DashboardLayout {
+  user_id: string;
+  widgets: DashboardWidget[];
+  theme: 'default' | 'compact' | 'detailed';
+}
+
 // ===== EXPORT ALL =====
 export type {
   // Re-export everything for convenience
   ObservationType,
-  LoadingState, 
+  LoadingState,
   NotificationType,
   Location,
   MapBounds,
@@ -428,5 +466,9 @@ export type {
   SearchFilters,
   SearchResult,
   AppEvent,
-  UserEvent
+  UserEvent,
+  Feedback,
+  LeaderboardEntry,
+  DashboardWidget,
+  DashboardLayout
 };

@@ -8,8 +8,7 @@ export interface AudioAnalysis {
 
 export function analyzeAudioBuffer(audioBuffer: AudioBuffer): AudioAnalysis {
     const channelData = audioBuffer.getChannelData(0);
-    const sampleRate = audioBuffer.sampleRate;
-    
+
     // Basic audio analysis
     let peak = 0;
     let sum = 0;

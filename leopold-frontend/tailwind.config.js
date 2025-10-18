@@ -1,7 +1,13 @@
+import forms from '@tailwindcss/forms';
+import typography from '@tailwindcss/typography';
+import aspectRatio from '@tailwindcss/aspect-ratio';
+import containerQueries from '@tailwindcss/container-queries';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./src/**/*.{html,js,svelte,ts}'],
-  
+  darkMode: 'class',
+
   theme: {
     extend: {
       // Leopold Nature-Inspired Color Palette
@@ -145,12 +151,12 @@ export default {
   
   // Plugins
   plugins: [
-    require('@tailwindcss/forms')({
+    forms({
       strategy: 'class', // Use class-based forms
     }),
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/aspect-ratio'),
-    require('@tailwindcss/container-queries'),
+    typography,
+    aspectRatio,
+    containerQueries,
     
     // Custom plugin for Leopold-specific utilities
     function({ addUtilities, addComponents, theme }) {

@@ -1,6 +1,4 @@
 // scripts/test-audio.js - Audio Testing Script
-import fs from 'fs';
-import path from 'path';
 
 console.log('🎵 Testing Audio Features...\n');
 

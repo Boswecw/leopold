@@ -24,8 +24,8 @@
     "dev": "vite dev --host",
     "build": "vite build",
     "preview": "vite preview --host",
-    "predeploy": "vite build",
-    "deploy": "gh-pages -d build -b gh-pages",
+   "predeploy": "yarn build && cp build/index.html build/404.html && sh -c 'echo > build/.nojekyll'",
+    "deploy": "gh-pages -d build -b gh-pages -m 'Deploy Leopold'",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
@@ -97,8 +97,7 @@
     "wavesurfer.js": "^7.8.6"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "bun": ">=1.0.0"
   },
   "browserslist": [
     "defaults",
@@ -108,14 +107,15 @@
     "last 2 versions"
   ],
   "pwa": {
-    "name": "Leopold Nature Observer",
-    "short_name": "Leopold",
-    "description": "Track and discover wildlife through community science",
-    "theme_color": "#2F5D50",
-    "background_color": "#FAFAF9",
-    "display": "standalone",
-    "orientation": "portrait-primary",
-    "scope": "/",
-    "start_url": "/"
-  }
+  "name": "Leopold Nature Observer",
+  "short_name": "Leopold",
+  "description": "Track and discover wildlife through community science",
+  "theme_color": "#2F5D50",
+  "background_color": "#FAFAF9",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": ".",
+  "start_url": "."
+}
+
 }

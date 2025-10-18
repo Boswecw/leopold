@@ -1,3 +1,6 @@
+<!-- @component
+no description yet
+-->
 <script context="module" lang="ts">
   import type {
     Observation,
@@ -124,13 +127,13 @@
   } from '$lib/types';
 
   // Map library imports
-  let L: any;
-  let markerClusterGroup: any;
+  let L: unknown;
+  let markerClusterGroup: unknown;
 
   const dispatch = createEventDispatcher<{
     observationSelected: Observation;
     boundsChanged: MapBounds;
-    markerClicked: { observation: Observation; marker: any };
+    markerClicked: { observation: Observation; marker: unknown };
   }>();
 
   // Props
@@ -145,15 +148,14 @@
 
   // State
   let mapContainer: HTMLDivElement;
-  let map: any;
-  let markerCluster: any;
-  let markers = new Map<string, any>();
+  let map: unknown;
+  let markerCluster: unknown;
+  let markers = new Map<string, unknown>();
   let audioPlayer: HTMLAudioElement | null = null;
-  let currentlyPlaying: string | null = null;
   let isInitialized = false;
 
   // Filter state
-  let activeFilters;
+  let activeFilters: ObservationFilters;
   let showFilterPanel = false;
 
   // Keep active filters in sync with the store
@@ -191,13 +193,13 @@
 
       try {
         await import('leaflet.markercluster');
-        markerClusterGroup = (L as any).markerClusterGroup;
+        markerClusterGroup = (L as Record<string, unknown>).markerClusterGroup;
       } catch (importError) {
         console.warn('leaflet.markercluster import failed:', importError);
         enableClustering = false;
       }
-      
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
+
+      delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
         iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -352,14 +354,15 @@
     });
   }
 
-  function createClusterIcon(cluster: any): any {
-    const count = cluster.getChildCount();
+  function createClusterIcon(cluster: Record<string, unknown>): unknown {
+    const count = (cluster.getChildCount as () => number)();
     let size = 'small';
-    
+
     if (count >= 100) size = 'large';
     else if (count >= 10) size = 'medium';
 
-    return L.divIcon({
+    const leafletLib = L as Record<string, (options: Record<string, unknown>) => unknown>;
+    return leafletLib.divIcon({
       html: `<div class="cluster-marker cluster-${size}"><span>${count}</span></div>`,
       className: 'marker-cluster',
       iconSize: [40, 40]
